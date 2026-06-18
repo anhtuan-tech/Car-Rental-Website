@@ -1,0 +1,66 @@
+## ==========================================
+## THƯ MỤC BUILD & OUTPUT (BINARIES)
+## ==========================================
+[Bb]in/
+[Oo]bj/
+[An]any[Vv]M/
+[X_x]64/
+[X_x]86/
+x64/
+x86/
+bld/
+[Log]s/
+[Tt]argets/
+
+## ==========================================
+## CẤU HÌNH VISUAL STUDIO & CÁ NHÂN
+## ==========================================
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+*.ide/
+
+## ==========================================
+## BẢO MẬT & MÔI TRƯỜNG (BẮT BUỘC)
+## ==========================================
+# Không bao giờ commit mật khẩu, chuỗi kết nối hoặc API keys
+.env
+.env.*
+appsettings.Development.json
+appsettings.Local.json
+
+# Thư mục chứa User Secrets của .NET Core (nếu lưu local)
+secrets.json
+.microsoft/usersecrets/
+
+## ==========================================
+## THƯ VIỆN & CÔNG CỤ FRONTEND (NPM, BOWER, LIBMAN)
+## ==========================================
+node_modules/
+jspm_packages/
+bower_components/
+.eslintcache
+
+# Thư mục thư viện tự động tải về trong wwwroot
+/wwwroot/lib/
+
+## ==========================================
+## FILE TẠM VÀ HỆ ĐIỀU HÀNH
+## ==========================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+*.tmp
+*.bak
+
+## ==========================================
+## KIỂM THỬ VÀ ĐO LƯỜNG (TEST & DIAGNOSTICS)
+## ==========================================
+*.log
+TestResults/
+*.crec
+*.cmbx
