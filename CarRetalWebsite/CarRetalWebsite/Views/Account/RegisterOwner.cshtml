@@ -1,0 +1,362 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng ký Chủ xe đối tác - CarRental</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="~/favicon.png" asp-append-version="true" />
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    
+    <!-- FontAwesome 6 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+    
+    <!-- Common Shared CSS -->
+    <link href="~/css/common.css" rel="stylesheet" />
+    
+    <style>
+        body {
+            background-color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .register-container {
+            height: 100vh;
+            display: flex;
+        }
+
+        /* Left Side: Image Sidebar */
+        .register-sidebar {
+            flex: 1.2;
+            background: linear-gradient(rgba(22, 163, 74, 0.15), rgba(15, 23, 42, 0.8)), 
+                        url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80') no-repeat center center;
+            background-size: cover;
+            display: none;
+            position: relative;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @@media (min-width: 992px) {
+            .register-sidebar {
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                padding: 60px;
+            }
+        }
+
+        .sidebar-content {
+            color: #ffffff;
+            z-index: 2;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+            opacity: 0;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sidebar-title {
+            font-weight: 800;
+            font-size: 2.75rem;
+            margin-bottom: 18px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        .sidebar-desc {
+            font-size: 1.15rem;
+            opacity: 0.95;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            font-weight: 350;
+            max-width: 500px;
+        }
+
+        /* Right Side: Form Area */
+        .register-form-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background-color: #f8fafc;
+            overflow-y: auto;
+        }
+
+        .form-box {
+            width: 100%;
+            max-width: 480px;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .brand-logo {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.03);
+            color: var(--primary-hover);
+        }
+
+        .form-title {
+            font-weight: 750;
+            font-size: 1.65rem;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .form-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            z-index: 10;
+            transition: color 0.3s ease;
+        }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 12px 18px 12px 48px;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+        }
+
+        .form-control-custom:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px var(--primary-light);
+            outline: none;
+        }
+
+        .form-control-custom:focus + .input-icon {
+            color: var(--primary-color);
+        }
+
+        .btn-register {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            font-weight: 600;
+            padding: 14px;
+            border-radius: 12px;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2);
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-register:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.3);
+        }
+
+        .text-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .text-link:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        /* Banner switch mode */
+        .partner-link-banner {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.88rem;
+            color: #0369a1;
+        }
+        
+        .partner-link-banner a {
+            color: #0284c7;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .partner-link-banner a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-container">
+        <!-- Left Side: Image Sidebar -->
+        <div class="register-sidebar">
+            <div class="sidebar-content">
+                <h2 class="sidebar-title">Gia Tăng Thu Nhập Từ Xe Nhàn Rỗi</h2>
+                <p class="sidebar-desc">Hợp tác cho thuê xe cùng CarRental để tạo nguồn thu nhập thụ động bền vững, an toàn và cực kỳ chuyên nghiệp.</p>
+            </div>
+        </div>
+
+        <!-- Right Side: Form Area -->
+        <div class="register-form-area">
+            <div class="form-box">
+                <!-- Brand logo -->
+                <a href="/" class="brand-logo">
+                    <i class="fa-solid fa-car-side"></i>
+                    <span>CarRental</span>
+                </a>
+
+                <h1 class="form-title">Đăng ký đối tác Chủ xe</h1>
+                <p class="form-subtitle">Tạo tài khoản Chủ xe để đăng tải phương tiện lên hệ thống</p>
+
+                <!-- Link to Customer signup -->
+                <div class="partner-link-banner">
+                    <span>Bạn muốn đăng ký thuê xe?</span>
+                    <a href="/Account/Register">Đăng ký Khách thuê <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+
+                <form asp-controller="Account" asp-action="RegisterOwner" method="POST">
+                    @Html.AntiForgeryToken()
+
+                    <div class="input-group-custom">
+                        <input type="text" name="fullName" class="form-control-custom" placeholder="Họ và tên" required />
+                        <i class="fa-regular fa-user input-icon"></i>
+                    </div>
+
+                    <div class="input-group-custom">
+                        <input type="email" name="email" class="form-control-custom" placeholder="Địa chỉ Email" required />
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                    </div>
+
+                    <div class="input-group-custom">
+                        <input type="tel" name="phoneNumber" class="form-control-custom" placeholder="Số điện thoại" required />
+                        <i class="fa-solid fa-phone input-icon"></i>
+                    </div>
+
+                    <div class="input-group-custom">
+                        <input type="password" name="password" class="form-control-custom" placeholder="Mật khẩu" required />
+                        <i class="fa-solid fa-lock input-icon"></i>
+                    </div>
+
+                    <div class="input-group-custom">
+                        <input type="password" name="confirmPassword" class="form-control-custom" placeholder="Xác nhận mật khẩu" required />
+                        <i class="fa-solid fa-lock-open input-icon"></i>
+                    </div>
+
+                    <div class="input-group-custom">
+                        <input type="text" name="idCardNo" class="form-control-custom" placeholder="Số CCCD / CMND" required />
+                        <i class="fa-regular fa-address-card input-icon"></i>
+                    </div>
+
+                    <div class="input-group-custom">
+                        <input type="text" name="address" class="form-control-custom" placeholder="Địa chỉ thường trú" required />
+                        <i class="fa-solid fa-house-chimney input-icon"></i>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-register">Đăng ký làm Chủ xe</button>
+
+                    <!-- Login redirect -->
+                    <div class="text-center mt-4">
+                        <span class="text-secondary">Đã có tài khoản?</span>
+                        <a href="/Account/Login" class="text-link ms-1">Đăng nhập ngay</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Toast configuration
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        @if (TempData["RegisterOwnerError"] != null)
+        {
+            <text>
+            Toast.fire({
+                icon: 'error',
+                title: '@Html.Raw(TempData["RegisterOwnerError"])'
+            });
+            </text>
+        }
+    </script>
+</body>
+</html>

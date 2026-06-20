@@ -1,0 +1,732 @@
+@model List<CarRetalWebsite.Models.User>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý tài khoản nhân viên";
+}
+
+<!-- Custom Styles for Management Grids -->
+<style>
+    .grid-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.02);
+        padding: 24px;
+    }
+
+    .table-custom th {
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #475569;
+        background-color: #f8fafc;
+        border-bottom: 1.5px solid #cbd5e1;
+        padding: 14px 16px;
+    }
+
+    .table-custom td {
+        padding: 14px 16px;
+        font-size: 0.92rem;
+        color: #334155;
+        vertical-align: middle;
+    }
+
+    .status-badge {
+        padding: 5px 12px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        border-radius: 8px;
+        display: inline-block;
+    }
+
+    .status-active { background-color: #dcfce7; color: #166534; }
+    .status-inactive { background-color: #f1f5f9; color: #475569; }
+    .status-banned { background-color: #fee2e2; color: #991b1b; }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: all 0.2s ease;
+        font-size: 0.88rem;
+    }
+
+    .btn-view-details { background-color: #e0f2fe; color: #0369a1; }
+    .btn-view-details:hover { background-color: #bae6fd; transform: scale(1.05); }
+    
+    .btn-edit-custom { background-color: #fef3c7; color: #d97706; }
+    .btn-edit-custom:hover { background-color: #fde68a; transform: scale(1.05); }
+
+    .btn-delete-custom { background-color: #fee2e2; color: #b91c1c; }
+    .btn-delete-custom:hover { background-color: #fecaca; transform: scale(1.05); }
+
+    .search-box-custom {
+        border-radius: 12px;
+        border: 1.5px solid #cbd5e1;
+        padding: 10px 16px 10px 42px;
+        font-size: 0.92rem;
+        font-weight: 500;
+        width: 100%;
+        max-width: 320px;
+        transition: all 0.3s ease;
+    }
+
+    .search-box-custom:focus {
+        border-color: #0284c7;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15);
+    }
+
+    .search-icon-wrapper {
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="h3 fw-bold text-dark mb-1">Quản lý Tài khoản Nhân viên</h1>
+        <p class="text-muted mb-0">Xem danh sách, tìm kiếm, tạo tài khoản và phân quyền nhân viên quản trị.</p>
+    </div>
+    <button class="btn btn-primary d-flex align-items-center gap-2 fw-semibold px-4 py-2" style="border-radius: 12px;" data-bs-toggle="modal" data-bs-target="#createStaffModal">
+        <i class="fa-solid fa-user-plus"></i> Thêm nhân viên mới
+    </button>
+</div>
+
+<div class="grid-card">
+    <!-- Filters Header -->
+    <form method="GET" action="/Admin/Staffs" class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="search-icon-wrapper w-100 w-md-auto">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" name="search" class="search-box-custom" placeholder="Tên, Email hoặc Số điện thoại..." value="@ViewBag.SearchTerm" />
+        </div>
+        @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm))
+        {
+            <a href="/Admin/Staffs" class="btn btn-link text-decoration-none text-secondary">
+                <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+            </a>
+        }
+    </form>
+
+    <!-- Table Grid -->
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle" id="staffTable">
+            <thead>
+                <tr>
+                    <th>Họ và tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var staff in Model)
+                    {
+                        <tr id="row-@staff.UserId">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="@(string.IsNullOrWhiteSpace(staff.Profile?.AvatarUrl) ? "/images/default-avatar.svg" : staff.Profile.AvatarUrl)" width="38" height="38" class="rounded-circle border" style="width: 38px; height: 38px; object-fit: cover;" />
+                                    <span class="fw-bold text-slate">@(staff.Profile?.FullName ?? "N/A")</span>
+                                </div>
+                            </td>
+                            <td>@staff.Email</td>
+                            <td>@staff.PhoneNumber</td>
+                            <td>
+                                @if (staff.Status == "Active")
+                                {
+                                    <span class="status-badge status-active">Đang hoạt động</span>
+                                }
+                                else if (staff.Status == "Inactive")
+                                {
+                                    <span class="status-badge status-inactive">Ngừng hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-banned">Bị khóa</span>
+                                }
+                            </td>
+                            <td>@staff.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button class="action-btn btn-view-details" onclick="openDetails(@staff.UserId)" title="Xem chi tiết">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button class="action-btn btn-edit-custom" onclick="openEdit(@staff.UserId)" title="Chỉnh sửa">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button class="action-btn btn-delete-custom" onclick="confirmDelete(@staff.UserId)" title="Xóa tài khoản">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-user-slash fs-2 mb-3 d-block text-secondary"></i>
+                            Không tìm thấy tài khoản nhân viên nào khớp với bộ lọc.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination bar -->
+    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <label class="text-muted mb-0" style="font-size:0.88rem; white-space:nowrap;">Hiển thị</label>
+            <select id="staffPageSize" class="form-select form-select-sm" style="width:70px; border-radius:8px; font-weight:600;">
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+            <span class="text-muted" id="staffSummary" style="font-size:0.88rem;"></span>
+        </div>
+        <div class="d-flex gap-1 flex-wrap" id="staffPagination"></div>
+    </div>
+</div>
+
+<!-- ==========================================
+     UC-20.3: MODAL - CREATE STAFF ACCOUNT
+     ========================================== -->
+<div class="modal fade" id="createStaffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold text-dark"><i class="fa-solid fa-user-plus text-primary me-2"></i>Thêm nhân viên mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createStaffForm" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-body px-4 py-3">
+                    <div class="mb-3 text-center">
+                        <label class="form-label fw-bold text-secondary d-block">Ảnh đại diện</label>
+                        <div class="d-inline-block position-relative">
+                            <img id="createAvatarPreview" src="/images/default-avatar.svg" class="rounded-circle border" width="80" height="80" style="object-fit: cover;" />
+                            <label for="createAvatarFile" class="btn btn-sm btn-light position-absolute bottom-0 end-0 rounded-circle border shadow-sm" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="fa-solid fa-camera text-secondary"></i>
+                            </label>
+                            <input type="file" id="createAvatarFile" name="avatarFile" accept="image/*" class="d-none" onchange="previewImage(this, 'createAvatarPreview')" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Họ và tên</label>
+                        <input type="text" name="fullName" class="form-control rounded-3" placeholder="Nhập họ và tên đầy đủ" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Địa chỉ Email</label>
+                        <input type="email" name="email" class="form-control rounded-3" placeholder="email@gmail.com" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Số điện thoại</label>
+                        <input type="tel" name="phoneNumber" class="form-control rounded-3" placeholder="09xxxxxx" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Mật khẩu ban đầu</label>
+                        <input type="password" name="password" class="form-control rounded-3" placeholder="Nhập mật khẩu" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Xác nhận mật khẩu</label>
+                        <input type="password" name="confirmPassword" class="form-control rounded-3" placeholder="Nhập lại mật khẩu" required />
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end">
+                    <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Tạo tài khoản</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     UC-20.4: MODAL - VIEW STAFF DETAILS
+     ========================================== -->
+<div class="modal fade" id="detailsStaffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold text-dark"><i class="fa-solid fa-circle-info text-info me-2"></i>Chi tiết tài khoản nhân viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-4 text-center">
+                <img id="detailAvatar" src="" class="rounded-circle border mb-3" width="90" height="90" style="object-fit: cover; aspect-ratio: 1/1;" />
+                <h4 class="fw-bold text-dark mb-1" id="detailFullName"></h4>
+                <span class="badge bg-primary mb-3">Nhân viên</span>
+                
+                <hr class="my-4 text-secondary opacity-25" />
+                
+                <div class="text-start">
+                    <div class="row mb-2">
+                        <div class="col-4 fw-semibold text-secondary">Email:</div>
+                        <div class="col-8 text-dark fw-bold" id="detailEmail"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-semibold text-secondary">Điện thoại:</div>
+                        <div class="col-8 text-dark fw-bold" id="detailPhone"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-semibold text-secondary">Trạng thái:</div>
+                        <div class="col-8" id="detailStatus"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 fw-semibold text-secondary">Ngày tạo:</div>
+                        <div class="col-8 text-dark fw-bold" id="detailCreatedAt"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end">
+                <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     UC-20.5: MODAL - UPDATE STAFF ACCOUNT
+     ========================================== -->
+<div class="modal fade" id="editStaffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold text-dark"><i class="fa-solid fa-user-gear text-warning me-2"></i>Chỉnh sửa thông tin nhân viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editStaffForm" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" id="editUserId" />
+                
+                <div class="modal-body px-4 py-3">
+                    <div class="mb-3 text-center">
+                        <label class="form-label fw-bold text-secondary d-block">Ảnh đại diện</label>
+                        <div class="d-inline-block position-relative">
+                            <img id="editAvatarPreview" src="" class="rounded-circle border" width="80" height="80" style="object-fit: cover;" />
+                            <label for="editAvatarFile" class="btn btn-sm btn-light position-absolute bottom-0 end-0 rounded-circle border shadow-sm" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="fa-solid fa-camera text-secondary"></i>
+                            </label>
+                            <input type="file" id="editAvatarFile" name="avatarFile" accept="image/*" class="d-none" onchange="previewImage(this, 'editAvatarPreview')" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Họ và tên</label>
+                        <input type="text" name="fullName" id="editFullName" class="form-control rounded-3" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Số điện thoại</label>
+                        <input type="tel" name="phoneNumber" id="editPhone" class="form-control rounded-3" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Trạng thái tài khoản</label>
+                        <select name="status" id="editStatus" class="form-select rounded-3" required>
+                            <option value="Active">Đang hoạt động</option>
+                            <option value="Inactive">Ngừng hoạt động</option>
+                            <option value="Banned">Bị khóa</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end">
+                    <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cropper -->
+<div class="modal fade" id="cropperModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="fw-bold text-dark"><i class="fa-solid fa-crop-simple text-primary me-2"></i>Cắt chỉnh ảnh đại diện</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btnCancelCrop"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <div class="img-container" style="max-height: 400px; background-color: #f1f5f9; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                    <img id="cropperImage" src="" style="max-width: 100%; display: block;" />
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end gap-2">
+                <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal" id="btnCancelCrop2">Hủy bỏ</button>
+                <button type="button" class="btn btn-primary rounded-3 px-4 fw-semibold" id="btnSaveCrop">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Cropper.js CSS & JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
+    <script>
+        // SweetAlert2 Toast Helper
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+
+        // Dictionary to store cropped image blobs
+        const croppedBlobs = {};
+        
+        let cropper = null;
+        let activeInput = null;
+        let activePreviewId = null;
+        let selectedFile = null;
+        let isCropped = false;
+
+        // Custom image selection handling to trigger crop modal
+        function previewImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                activeInput = input;
+                activePreviewId = previewId;
+                isCropped = false;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    // Set src of cropper image
+                    const cropperImage = document.getElementById('cropperImage');
+                    cropperImage.src = e.target.result;
+                    
+                    // Show cropper modal
+                    const modal = new bootstrap.Modal(document.getElementById('cropperModal'));
+                    modal.show();
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        }
+
+        // Initialize Cropper when modal is fully visible
+        document.getElementById('cropperModal').addEventListener('shown.bs.modal', function () {
+            const cropperImage = document.getElementById('cropperImage');
+            cropper = new Cropper(cropperImage, {
+                aspectRatio: 1, // force 1:1 square
+                viewMode: 1,    // restrict crop box to image size
+                autoCropArea: 0.9,
+                dragMode: 'move',
+                responsive: true
+            });
+        });
+
+        // Destroy Cropper instance when modal is closed
+        document.getElementById('cropperModal').addEventListener('hidden.bs.modal', function () {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            if (!isCropped && activeInput) {
+                activeInput.value = ''; // clear select if user canceled without cropping
+            }
+            // Restore scroll for underlying modals
+            if (document.querySelector('.modal.show')) {
+                document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+
+        // Save Cropped Image
+        document.getElementById('btnSaveCrop').addEventListener('click', function () {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 500,
+                    height: 500
+                });
+                
+                isCropped = true;
+
+                // Set UI preview image source
+                const preview = document.getElementById(activePreviewId);
+                preview.src = canvas.toDataURL('image/jpeg', 0.9);
+                
+                // Store cropped Blob for form submit
+                canvas.toBlob(function (blob) {
+                    croppedBlobs[activePreviewId] = blob;
+                }, 'image/jpeg', 0.9);
+                
+                // Hide cropper modal
+                bootstrap.Modal.getInstance(document.getElementById('cropperModal')).hide();
+            }
+        });
+
+        // Reset create modal form and preview
+        document.getElementById('createStaffModal').addEventListener('show.bs.modal', function () {
+            document.getElementById('createStaffForm').reset();
+            document.getElementById('createAvatarPreview').src = '/images/default-avatar.svg';
+            document.getElementById('createAvatarFile').value = '';
+            croppedBlobs['createAvatarPreview'] = null;
+        });
+
+        // 1. AJAX Create Staff
+        document.getElementById('createStaffForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            if (croppedBlobs['createAvatarPreview']) {
+                formData.set('avatarFile', croppedBlobs['createAvatarPreview'], 'avatar.jpg');
+            }
+            
+            fetch('/Admin/CreateStaff', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('createStaffModal')).hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Toast.fire({
+                        icon: 'error',
+                        title: data.message
+                    });
+                }
+            })
+            .catch(() => {
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Lỗi không xác định đã xảy ra.'
+                });
+            });
+        });
+
+        // 2. Fetch Details for View Popup
+        function openDetails(id) {
+            fetch(`/Admin/GetStaffDetails?id=${id}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('detailAvatar').src = data.avatarUrl || '/images/default-avatar.svg';
+                document.getElementById('detailFullName').textContent = data.fullName;
+                document.getElementById('detailEmail').textContent = data.email;
+                document.getElementById('detailPhone').textContent = data.phoneNumber;
+                document.getElementById('detailCreatedAt').textContent = data.createdAt;
+                
+                const statusDiv = document.getElementById('detailStatus');
+                statusDiv.innerHTML = '';
+                if (data.status === 'Active') {
+                    statusDiv.innerHTML = '<span class="status-badge status-active">Đang hoạt động</span>';
+                } else if (data.status === 'Inactive') {
+                    statusDiv.innerHTML = '<span class="status-badge status-inactive">Ngừng hoạt động</span>';
+                } else {
+                    statusDiv.innerHTML = '<span class="status-badge status-banned">Bị khóa</span>';
+                }
+                
+                new bootstrap.Modal(document.getElementById('detailsStaffModal')).show();
+            })
+            .catch(() => {
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Không thể lấy thông tin chi tiết.'
+                });
+            });
+        }
+
+        // 3. Fetch Details for Edit Popup
+        function openEdit(id) {
+            fetch(`/Admin/GetStaffDetails?id=${id}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('editUserId').value = data.userId;
+                document.getElementById('editFullName').value = data.fullName;
+                document.getElementById('editPhone').value = data.phoneNumber;
+                document.getElementById('editStatus').value = data.status;
+                document.getElementById('editAvatarPreview').src = data.avatarUrl || '/images/default-avatar.svg';
+                document.getElementById('editAvatarFile').value = '';
+                croppedBlobs['editAvatarPreview'] = null;
+                
+                new bootstrap.Modal(document.getElementById('editStaffModal')).show();
+            })
+            .catch(() => {
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Không thể lấy thông tin chỉnh sửa.'
+                });
+            });
+        }
+
+        // 4. AJAX Save Changes Edit Form
+        document.getElementById('editStaffForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            if (croppedBlobs['editAvatarPreview']) {
+                formData.set('avatarFile', croppedBlobs['editAvatarPreview'], 'avatar.jpg');
+            }
+            
+            fetch('/Admin/UpdateStaff', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('editStaffModal')).hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đã cập nhật!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Toast.fire({
+                        icon: 'error',
+                        title: data.message
+                    });
+                }
+            })
+            .catch(() => {
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Lỗi không xác định khi lưu thông tin.'
+                });
+            });
+        });
+
+        // 5. AJAX Confirm and Delete Staff
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Bạn chắc chắn muốn xóa?',
+                text: "Tài khoản nhân viên này và hồ sơ sẽ bị xóa vĩnh viễn khỏi hệ thống!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Có, xóa ngay!',
+                cancelButtonText: 'Hủy bỏ',
+                customClass: {
+                    popup: 'rounded-4'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', token);
+                    
+                    fetch('/Admin/DeleteStaff', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById(`row-${id}`).fadeOutAndRemove();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đã xóa!',
+                                text: data.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi xóa!',
+                                text: data.message
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        Toast.fire({
+                            icon: 'error',
+                            title: 'Lỗi hệ thống khi xóa nhân viên.'
+                        });
+                    });
+                }
+            });
+        }
+
+        // Row Fade Helper
+        Element.prototype.fadeOutAndRemove = function () {
+            this.style.transition = 'all 0.4s ease';
+            this.style.opacity = 0;
+            this.style.transform = 'translateY(10px)';
+            setTimeout(() => {
+                this.remove();
+                // Check if table is empty
+                const tableBody = document.querySelector('#staffTable tbody');
+                if (tableBody.querySelectorAll('tr').length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-user-slash fs-2 mb-3 d-block text-secondary"></i>
+                                Danh sách trống.
+                            </td>
+                        </tr>
+                    `;
+                }
+            }, 400);
+        };
+        // Pagination
+        const staffPager = paginate(document.querySelector('#staffTable tbody'), 'staffSummary', 'staffPagination', 5);
+        document.getElementById('staffPageSize').addEventListener('change', function() {
+            staffPager.setPageSize(parseInt(this.value));
+        });
+
+        function paginate(tbody, summaryId, pgId, initSize) {
+            if (!tbody) return { setPageSize: () => {} };
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            let cur = 1;
+            let pageSize = initSize;
+            function render() {
+                const total = rows.length;
+                const pages = Math.ceil(total / pageSize) || 1;
+                cur = Math.min(cur, pages);
+                const s = (cur - 1) * pageSize;
+                const e = Math.min(s + pageSize, total);
+                rows.forEach((r, i) => r.style.display = (i >= s && i < e) ? '' : 'none');
+                const sum = document.getElementById(summaryId);
+                if (sum) sum.textContent = total ? `trên ${total} bản ghi` : '';
+                const pg = document.getElementById(pgId);
+                if (!pg) return;
+                pg.innerHTML = '';
+                const btn = (label, page, disabled, active) => {
+                    const b = document.createElement('button');
+                    b.innerHTML = label;
+                    b.className = `btn btn-sm fw-semibold px-3 ${active ? 'btn-primary' : 'btn-light border'}`;
+                    b.style.cssText = 'border-radius:8px; min-width:36px;';
+                    b.disabled = disabled;
+                    b.onclick = () => { cur = page; render(); };
+                    pg.appendChild(b);
+                };
+                btn('‹', cur - 1, cur === 1, false);
+                for (let i = 1; i <= pages; i++) btn(i, i, false, i === cur);
+                btn('›', cur + 1, cur === pages, false);
+            }
+            render();
+            return { setPageSize(size) { pageSize = size; cur = 1; render(); } };
+        }
+    </script>
+}

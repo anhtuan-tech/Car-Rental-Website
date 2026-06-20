@@ -1,0 +1,312 @@
+@model List<CarRetalWebsite.Models.User>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Trang tổng quan";
+}
+
+<!-- Style Enhancements for Dashboard -->
+<style>
+    .stat-card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.02);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.06);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-blue { background-color: #f0f9ff; color: #0284c7; }
+    .stat-green { background-color: #f0fdf4; color: #16a34a; }
+    .stat-orange { background-color: #fff7ed; color: #ea580c; }
+    .stat-purple { background-color: #faf5ff; color: #7c3aed; }
+    .stat-teal { background-color: #f0fdfa; color: #0d9488; }
+
+    .stat-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 600;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .content-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.02);
+        padding: 24px;
+    }
+
+    .card-heading {
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: #0f17 slate;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-heading i {
+        color: #0284c7;
+    }
+
+    .table-custom th {
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #475569;
+        background-color: #f8fafc;
+        border-bottom: 1.5px solid #cbd5e1;
+        padding: 14px 16px;
+    }
+
+    .table-custom td {
+        padding: 14px 16px;
+        font-size: 0.92rem;
+        color: #334155;
+        vertical-align: middle;
+    }
+
+    .badge-custom {
+        padding: 6px 12px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        border-radius: 8px;
+    }
+
+    .badge-customer { background-color: #e0f2fe; color: #0369a1; }
+    .badge-owner { background-color: #fef3c7; color: #d97706; }
+    .badge-admin { background-color: #fee2e2; color: #b91c1c; }
+    .badge-staff { background-color: #f3e8ff; color: #6b21a8; }
+</style>
+
+<div class="row g-4 mb-5">
+    <!-- Stat Item -->
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon stat-blue">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div>
+                <p class="stat-label">Thành viên</p>
+                <h3 class="stat-value">@ViewBag.TotalUsers</h3>
+            </div>
+        </div>
+    </div>
+    <!-- Stat Item -->
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon stat-purple">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div>
+                <p class="stat-label">Nhân viên</p>
+                <h3 class="stat-value">@ViewBag.TotalStaff</h3>
+            </div>
+        </div>
+    </div>
+    <!-- Stat Item -->
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon stat-teal">
+                <i class="fa-solid fa-car"></i>
+            </div>
+            <div>
+                <p class="stat-label">Số xe ô tô</p>
+                <h3 class="stat-value">@ViewBag.TotalCars</h3>
+            </div>
+        </div>
+    </div>
+    <!-- Stat Item -->
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon stat-orange">
+                <i class="fa-solid fa-receipt"></i>
+            </div>
+            <div>
+                <p class="stat-label">Lượt thuê</p>
+                <h3 class="stat-value">@ViewBag.TotalBookings</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Signups -->
+    <div class="col-lg-8">
+        <div class="content-card">
+            <h3 class="card-heading">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Đăng ký tài khoản mới nhất
+            </h3>
+            
+            <div class="table-responsive">
+                <table class="table table-hover table-custom align-middle">
+                    <thead>
+                        <tr>
+                            <th>Họ và tên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Vai trò</th>
+                            <th>Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashTbody">
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="@(string.IsNullOrWhiteSpace(user.Profile?.AvatarUrl) ? "/images/default-avatar.svg" : user.Profile.AvatarUrl)" width="30" height="30" class="rounded-circle" style="width: 30px; height: 30px; object-fit: cover;" />
+                                            <span class="fw-bold">@(user.Profile?.FullName ?? "N/A")</span>
+                                        </div>
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>@user.PhoneNumber</td>
+                                    <td>
+                                        @if (user.Role?.RoleName == "Admin")
+                                        {
+                                            <span class="badge-custom badge-admin">Quản trị viên</span>
+                                        }
+                                        else if (user.Role?.RoleName == "Staff")
+                                        {
+                                            <span class="badge-custom badge-staff">Nhân viên</span>
+                                        }
+                                        else if (user.Role?.RoleName == "Owner")
+                                        {
+                                            <span class="badge-custom badge-owner">Chủ xe</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-custom badge-customer">Khách thuê</span>
+                                        }
+                                    </td>
+                                    <td>@user.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Chưa có tài khoản nào đăng ký gần đây.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination bar -->
+            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="text-muted mb-0" style="font-size:0.88rem; white-space:nowrap;">Hiển thị</label>
+                    <select id="dashPageSize" class="form-select form-select-sm" style="width:70px; border-radius:8px; font-weight:600;">
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                    <span class="text-muted" id="dashSummary" style="font-size:0.88rem;"></span>
+                </div>
+                <div class="d-flex gap-1 flex-wrap" id="dashPagination"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick stats block -->
+    <div class="col-lg-4">
+        <div class="content-card h-100">
+            <h3 class="card-heading">
+                <i class="fa-solid fa-sack-dollar"></i>
+                Hiệu suất doanh thu
+            </h3>
+            <div class="text-center py-4">
+                <p class="text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.8rem; letter-spacing: 0.8px;">Tổng doanh thu hệ thống</p>
+                <h2 class="fw-bold text-success" style="font-size: 2.2rem; letter-spacing: -0.5px;">@ViewBag.TotalRevenue.ToString("#,##0") đ</h2>
+                <div class="mt-4 p-3 bg-light rounded-4 mb-3">
+                    <span class="text-secondary d-block mb-1" style="font-size: 0.82rem;"><i class="fa-solid fa-circle-info text-info me-1"></i> Giá trị tính bằng tổng phí thuê xe trước khi thanh toán.</span>
+                </div>
+                <a href="/Admin/RevenueReport" class="btn btn-outline-primary w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-chart-line"></i> Xem báo cáo chi tiết
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const dashPager = paginate('dashTbody', 'dashSummary', 'dashPagination', 5);
+    document.getElementById('dashPageSize').addEventListener('change', function() {
+        dashPager.setPageSize(parseInt(this.value));
+    });
+
+    function paginate(tbodyId, summaryId, pgId, initSize) {
+        const tbody = document.getElementById(tbodyId);
+        if (!tbody) return { setPageSize: () => {} };
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        let cur = 1;
+        let pageSize = initSize;
+
+        function render() {
+            const total = rows.length;
+            const pages = Math.ceil(total / pageSize) || 1;
+            cur = Math.min(cur, pages);
+            const s = (cur - 1) * pageSize;
+            const e = Math.min(s + pageSize, total);
+            rows.forEach((r, i) => r.style.display = (i >= s && i < e) ? '' : 'none');
+
+            const sum = document.getElementById(summaryId);
+            if (sum) sum.textContent = total ? `trên ${total} bản ghi` : '';
+
+            const pg = document.getElementById(pgId);
+            if (!pg) return;
+            pg.innerHTML = '';
+            const btn = (label, page, disabled, active) => {
+                const b = document.createElement('button');
+                b.innerHTML = label;
+                b.className = `btn btn-sm fw-semibold px-3 ${active ? 'btn-primary' : 'btn-light border'}`;
+                b.style.cssText = 'border-radius:8px; min-width:36px;';
+                b.disabled = disabled;
+                b.onclick = () => { cur = page; render(); };
+                pg.appendChild(b);
+            };
+            btn('‹', cur - 1, cur === 1, false);
+            for (let i = 1; i <= pages; i++) btn(i, i, false, i === cur);
+            btn('›', cur + 1, cur === pages, false);
+        }
+        render();
+        return {
+            setPageSize(size) { pageSize = size; cur = 1; render(); }
+        };
+    }
+</script>
+}
