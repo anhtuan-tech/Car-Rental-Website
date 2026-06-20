@@ -1,0 +1,882 @@
+@model List<CarRetalWebsite.Models.Booking>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Báo cáo doanh thu";
+}
+
+<!-- Custom Premium CSS Styling for Revenue Report -->
+<style>
+    .report-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.02);
+        padding: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .kpi-card {
+        position: relative;
+        overflow: hidden;
+        border: none;
+        color: #ffffff;
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        top: -30px;
+        right: -30px;
+        transition: transform 0.5s ease;
+    }
+
+    .kpi-card:hover::before {
+        transform: scale(1.2);
+    }
+
+    .kpi-blue   { background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%); }
+    .kpi-green  { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); }
+    .kpi-orange { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); }
+    .kpi-purple { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); }
+    .kpi-rose   { background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%); }
+    .kpi-teal   { background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%); }
+
+    .kpi-val {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+
+    .kpi-lbl {
+        font-size: 0.85rem;
+        font-weight: 600;
+        opacity: 0.85;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+
+    .kpi-icon {
+        font-size: 1.5rem;
+        opacity: 0.8;
+    }
+
+    .preset-btn {
+        border-radius: 10px;
+        padding: 6px 14px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: 1px solid #cbd5e1;
+        background-color: #ffffff;
+        color: #475569;
+    }
+
+    .preset-btn:hover, .preset-btn.active {
+        background-color: #0284c7;
+        color: #ffffff;
+        border-color: #0284c7;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.2);
+    }
+
+    .table-custom th {
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #475569;
+        background-color: #f8fafc;
+        border-bottom: 1.5px solid #cbd5e1;
+        padding: 14px 16px;
+    }
+
+    .table-custom td {
+        padding: 14px 16px;
+        font-size: 0.92rem;
+        color: #334155;
+        vertical-align: middle;
+    }
+
+    .status-badge {
+        padding: 5px 12px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        border-radius: 8px;
+        display: inline-block;
+    }
+
+    .status-approved, .status-completed { background-color: #dcfce7; color: #166534; }
+    .status-pending  { background-color: #fff7ed; color: #c2410c; }
+    .status-cancelled, .status-failed   { background-color: #fee2e2; color: #991b1b; }
+
+    .search-box-custom {
+        border-radius: 12px;
+        border: 1.5px solid #cbd5e1;
+        padding: 8px 16px 8px 38px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        width: 100%;
+        max-width: 280px;
+        transition: all 0.3s ease;
+    }
+
+    .search-box-custom:focus {
+        border-color: #0284c7;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15);
+    }
+
+    .search-icon-wrapper { position: relative; }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    .page-link-custom {
+        border-radius: 8px;
+        margin: 0 3px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        transition: all 0.2s ease;
+        padding: 6px 12px;
+        text-decoration: none;
+    }
+
+    .page-link-custom:hover, .page-link-custom.active {
+        background-color: #0284c7;
+        color: #ffffff;
+        border-color: #0284c7;
+    }
+
+    .chart-container-canvas {
+        position: relative;
+        height: 320px;
+        width: 100%;
+    }
+
+    .chart-container-sm {
+        position: relative;
+        height: 260px;
+        width: 100%;
+    }
+
+    /* Owner rank badge */
+    .rank-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.8rem;
+    }
+    .rank-1 { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #fff; }
+    .rank-2 { background: linear-gradient(135deg, #94a3b8, #cbd5e1); color: #fff; }
+    .rank-3 { background: linear-gradient(135deg, #b45309, #d97706); color: #fff; }
+    .rank-other { background: #f1f5f9; color: #475569; }
+
+    /* Section divider */
+    .section-divider {
+        border: none;
+        border-top: 2px dashed #e2e8f0;
+        margin: 0;
+    }
+</style>
+
+<!-- Header Section -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="h3 fw-bold text-dark mb-1">Báo cáo hiệu suất Doanh thu</h1>
+        <p class="text-muted mb-0">Theo dõi doanh số, hoa hồng hệ thống, chi trả chủ xe và hiệu suất từng Owner.</p>
+    </div>
+    <a href="#" id="btnExportCsv" class="btn btn-success d-flex align-items-center gap-2 fw-semibold px-4 py-2" style="border-radius: 12px;">
+        <i class="fa-solid fa-file-excel"></i> Xuất CSV
+    </a>
+</div>
+
+<!-- Filters Bar -->
+<div class="report-card mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-lg-7 col-md-12">
+            <label class="form-label fw-bold text-secondary mb-2">Chọn khoảng thời gian nhanh</label>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="preset-btn" onclick="setPreset('today', this)">Hôm nay</button>
+                <button type="button" class="preset-btn" onclick="setPreset('last7', this)">7 ngày qua</button>
+                <button type="button" class="preset-btn active" onclick="setPreset('thismonth', this)">Tháng này</button>
+                <button type="button" class="preset-btn" onclick="setPreset('lastmonth', this)">Tháng trước</button>
+                <button type="button" class="preset-btn" onclick="setPreset('thisyear', this)">Năm nay</button>
+            </div>
+        </div>
+        <div class="col-lg-5 col-md-12">
+            <form id="filterForm" class="row g-2">
+                <div class="col-6">
+                    <label class="form-label fw-bold text-secondary mb-1">Từ ngày</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control rounded-3" value="@ViewBag.StartDate" />
+                </div>
+                <div class="col-6">
+                    <label class="form-label fw-bold text-secondary mb-1">Đến ngày</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control rounded-3" value="@ViewBag.EndDate" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards – Row 1 -->
+<div class="row g-4 mb-3">
+    <div class="col-md-6 col-lg-3">
+        <div class="report-card kpi-card kpi-blue d-flex justify-content-between align-items-center">
+            <div>
+                <p class="kpi-lbl">Lượt đặt xe</p>
+                <h3 class="kpi-val" id="valBookings">@ViewBag.TotalBookings</h3>
+            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="report-card kpi-card kpi-green d-flex justify-content-between align-items-center">
+            <div>
+                <p class="kpi-lbl">Tổng doanh thu</p>
+                <h3 class="kpi-val" id="valRevenue">@ViewBag.TotalRevenue.ToString("#,##0") đ</h3>
+            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="report-card kpi-card kpi-orange d-flex justify-content-between align-items-center">
+            <div>
+                <p class="kpi-lbl">Hoa hồng hệ thống</p>
+                <h3 class="kpi-val" id="valCommission">@ViewBag.TotalCommission.ToString("#,##0") đ</h3>
+            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-percentage"></i></div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="report-card kpi-card kpi-purple d-flex justify-content-between align-items-center">
+            <div>
+                <p class="kpi-lbl">Chi trả chủ xe</p>
+                <h3 class="kpi-val" id="valPayout">@ViewBag.TotalPayout.ToString("#,##0") đ</h3>
+            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards – Row 2 -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="report-card kpi-card kpi-teal d-flex justify-content-between align-items-center">
+            <div>
+                <p class="kpi-lbl">Doanh thu TB / đơn</p>
+                <h3 class="kpi-val" id="valAvgRevenue">@ViewBag.AvgRevenue.ToString("#,##0") đ</h3>
+            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-chart-simple"></i></div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="report-card kpi-card kpi-rose d-flex justify-content-between align-items-center">
+            <div>
+                <p class="kpi-lbl">Tỷ lệ hủy đơn</p>
+                <h3 class="kpi-val" id="valCancelRate">@ViewBag.CancellationRate %</h3>
+            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-ban"></i></div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="report-card d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg,#f1f5f9,#e2e8f0);">
+            <div>
+                <p class="kpi-lbl text-secondary">Số Owner có đơn</p>
+                <h3 class="kpi-val text-dark" id="valOwnerCount">0</h3>
+            </div>
+            <div style="font-size:1.5rem; opacity:0.5;"><i class="fa-solid fa-users text-primary"></i></div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="report-card d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg,#f1f5f9,#e2e8f0);">
+            <div>
+                <p class="kpi-lbl text-secondary">Đơn hoàn thành</p>
+                <h3 class="kpi-val text-dark" id="valCompletedCount">0</h3>
+            </div>
+            <div style="font-size:1.5rem; opacity:0.5;"><i class="fa-solid fa-circle-check text-success"></i></div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="report-card">
+            <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-chart-line text-primary me-2"></i>Biểu đồ xu hướng doanh thu</h4>
+            <div class="chart-container-canvas">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="report-card h-100">
+            <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-chart-pie text-primary me-2"></i>Trạng thái đơn thuê</h4>
+            <div class="chart-container-canvas d-flex align-items-center justify-content-center">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="report-card h-100">
+            <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-car text-warning me-2"></i>Top 5 xe doanh thu cao nhất</h4>
+            <div class="chart-container-sm">
+                <canvas id="topCarsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="report-card h-100">
+            <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-crown text-warning me-2"></i>Top 5 Owner doanh thu cao nhất</h4>
+            <div class="chart-container-sm">
+                <canvas id="topOwnersChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Transaction Detail Table -->
+<div class="report-card">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-list-check text-primary me-2"></i>Danh sách chi tiết giao dịch</h4>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="search-icon-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="tableSearch" class="search-box-custom" placeholder="Tìm mã, khách, xe, chủ xe..." />
+            </div>
+            <select id="statusFilter" class="form-select rounded-3" style="width: auto; font-size: 0.9rem; font-weight: 550;">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Approved">Đã duyệt</option>
+                <option value="Completed">Đã hoàn thành</option>
+                <option value="Pending">Chờ duyệt</option>
+                <option value="Cancelled">Đã hủy</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle" id="revenueTable">
+            <thead>
+                <tr>
+                    <th>Mã Đơn</th>
+                    <th>Khách Hàng</th>
+                    <th>Tên Xe</th>
+                    <th>Biển Số</th>
+                    <th>Chủ Xe</th>
+                    <th>Thời Gian Thuê</th>
+                    <th class="text-end">Doanh Thu</th>
+                    <th class="text-end">Hoa Hồng (10%)</th>
+                    <th class="text-end">Chủ Xe Nhận</th>
+                    <th>Trạng Thái</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-3">
+        <div class="text-muted" style="font-size: 0.9rem;" id="tableSummary">Hiển thị 0 - 0 trên 0 bản ghi</div>
+        <div class="d-flex gap-1" id="paginationControls"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        function translateStatus(status) {
+            const statusMap = {
+                'Approved':  'Đã duyệt',
+                'Completed': 'Đã hoàn thành',
+                'Pending':   'Chờ duyệt',
+                'Cancelled': 'Đã hủy',
+                'Failed':    'Thất bại'
+            };
+            return statusMap[status] || status;
+        }
+
+        // ── Initial data from server ──────────────────────────────────────
+        let rawChartData   = @Html.Raw(ViewBag.ChartDataJson);
+        let rawStatusData  = @Html.Raw(ViewBag.StatusDataJson);
+        let rawOwnerStats  = @Html.Raw(ViewBag.OwnerStatsJson);
+        let rawTopCars     = @Html.Raw(ViewBag.TopCarsJson);
+
+        // ── Bookings list state ───────────────────────────────────────────
+        let allBookings      = [];
+        let filteredBookings = [];
+        let currentPage      = 1;
+        const pageSize       = 8;
+
+        // ── Chart instances ───────────────────────────────────────────────
+        let trendChartInstance    = null;
+        let statusChartInstance   = null;
+        let topCarsChartInstance  = null;
+        let topOwnersChartInstance= null;
+
+        // ── Init ──────────────────────────────────────────────────────────
+        document.addEventListener("DOMContentLoaded", function () {
+            updateExportUrl();
+            renderTrendChart(rawChartData);
+            renderStatusChart(rawStatusData);
+            renderTopCarsChart(rawTopCars);
+            renderTopOwnersChart(rawOwnerStats);
+            renderOwnerTable(rawOwnerStats);
+            submitFilter(false);
+
+            document.getElementById('startDate').addEventListener('change',  () => { submitFilter(true); resetPresetActive(); });
+            document.getElementById('endDate').addEventListener('change',    () => { submitFilter(true); resetPresetActive(); });
+            document.getElementById('tableSearch').addEventListener('input', filterAndPaginateTable);
+            document.getElementById('statusFilter').addEventListener('change', filterAndPaginateTable);
+            document.getElementById('ownerSearch').addEventListener('input', filterOwnerTable);
+        });
+
+        // ── AJAX Filter ───────────────────────────────────────────────────
+        function submitFilter(isAjax = true) {
+            const start = document.getElementById('startDate').value;
+            const end   = document.getElementById('endDate').value;
+            updateExportUrl();
+
+            if (!isAjax) {
+                allBookings = [
+                    @foreach(var b in Model)
+                    {
+                        <text>
+                        {
+                            bookingId:          @b.BookingId,
+                            customerName:       '@Html.Raw(b.Customer?.Profile?.FullName ?? "N/A")',
+                            ownerName:          '@Html.Raw(b.Car?.Owner?.Profile?.FullName ?? b.Car?.Owner?.Email ?? "N/A")',
+                            carName:            '@Html.Raw(b.Car?.CarName ?? "N/A")',
+                            licensePlate:       '@b.Car?.LicensePlate',
+                            startDate:          '@b.StartDate.ToString("dd/MM/yyyy HH:mm")',
+                            endDate:            '@b.EndDate.ToString("dd/MM/yyyy HH:mm")',
+                            totalDays:          @b.TotalDays,
+                            subtotalFee:        @b.SubtotalFee,
+                            platformCommission: @b.PlatformCommission,
+                            ownerPayout:        @b.OwnerPayout,
+                            status:             '@b.Status',
+                            createdAt:          '@b.CreatedAt.ToString("dd/MM/yyyy HH:mm")'
+                        },
+                        </text>
+                    }
+                ];
+                filteredBookings = [...allBookings];
+                updateExtraKpis(rawOwnerStats, allBookings);
+                paginateTable();
+                return;
+            }
+
+            fetch(`/Admin/RevenueReport?startDate=${start}&endDate=${end}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                animateCountValue("valBookings",   data.totalBookings,    false);
+                animateCountValue("valRevenue",    data.totalRevenue,     true);
+                animateCountValue("valCommission", data.totalCommission,  true);
+                animateCountValue("valPayout",     data.totalPayout,      true);
+                animateCountValue("valAvgRevenue", data.avgRevenue,       true);
+
+                document.getElementById('valCancelRate').textContent = data.cancellationRate + ' %';
+
+                renderTrendChart(data.chartData);
+                renderStatusChart(data.statusData);
+                renderTopCarsChart(data.topCarsData);
+                renderTopOwnersChart(data.ownerStatsData);
+                renderOwnerTable(data.ownerStatsData);
+
+                allBookings      = data.bookings;
+                filteredBookings = [...allBookings];
+                currentPage      = 1;
+                updateExtraKpis(data.ownerStatsData, allBookings);
+                filterAndPaginateTable();
+            })
+            .catch(err => console.error("Lỗi khi tải dữ liệu báo cáo:", err));
+        }
+
+        function updateExtraKpis(ownerStats, bookings) {
+            document.getElementById('valOwnerCount').textContent   = ownerStats ? ownerStats.length : 0;
+            const completed = bookings.filter(b => b.status === 'Completed' || b.status === 'Approved').length;
+            document.getElementById('valCompletedCount').textContent = completed;
+        }
+
+        // ── Owner Table ───────────────────────────────────────────────────
+        let allOwnerStats = [];
+
+        function renderOwnerTable(ownerStats) {
+            allOwnerStats = ownerStats || [];
+            filterOwnerTable();
+        }
+
+        function filterOwnerTable() {
+            const q = document.getElementById('ownerSearch').value.toLowerCase().trim();
+            const filtered = q
+                ? allOwnerStats.filter(o =>
+                    (o.ownerName || o.OwnerName || '').toLowerCase().includes(q) ||
+                    (o.ownerEmail || o.OwnerEmail || '').toLowerCase().includes(q))
+                : allOwnerStats;
+
+            const tbody = document.getElementById('ownerTableBody');
+            const tfoot = document.getElementById('ownerTableFoot');
+            tbody.innerHTML = '';
+            tfoot.innerHTML = '';
+
+            if (!filtered || filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-users-slash fs-2 mb-3 d-block text-secondary"></i>
+                    Không có dữ liệu Owner trong khoảng thời gian này.</td></tr>`;
+                return;
+            }
+
+            let totalRev = 0, totalCom = 0, totalPay = 0, totalBk = 0;
+
+            filtered.forEach((o, idx) => {
+                const name      = o.ownerName  || o.OwnerName  || 'N/A';
+                const email     = o.ownerEmail || o.OwnerEmail || 'N/A';
+                const cars      = o.totalCars  || o.TotalCars  || 0;
+                const bks       = o.totalBookings || o.TotalBookings || 0;
+                const rev       = o.totalRevenue  || o.TotalRevenue  || 0;
+                const com       = o.totalCommission || o.TotalCommission || 0;
+                const pay       = o.totalPayout || o.TotalPayout || 0;
+                const avg       = o.avgRevenue  || o.AvgRevenue  || 0;
+
+                totalRev += rev; totalCom += com; totalPay += pay; totalBk += bks;
+
+                const rankCls = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-other';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="rank-badge ${rankCls}">${idx + 1}</span></td>
+                        <td class="fw-bold">${name}</td>
+                        <td class="text-muted" style="font-size:0.85rem;">${email}</td>
+                        <td class="text-center"><span class="badge bg-light text-dark border">${cars} xe</span></td>
+                        <td class="text-center fw-semibold">${bks}</td>
+                        <td class="text-end fw-bold text-success">${rev.toLocaleString('vi-VN')} đ</td>
+                        <td class="text-end fw-bold text-warning">${com.toLocaleString('vi-VN')} đ</td>
+                        <td class="text-end fw-bold text-primary">${pay.toLocaleString('vi-VN')} đ</td>
+                        <td class="text-end text-muted">${avg.toLocaleString('vi-VN')} đ</td>
+                    </tr>`;
+            });
+
+            // Footer summary
+            tfoot.innerHTML = `
+                <tr style="border-top: 2px solid #cbd5e1; background: #f8fafc;">
+                    <td colspan="4" class="fw-bold text-secondary" style="padding: 12px 16px; font-size: 0.85rem;">TỔNG CỘNG (${filtered.length} owner)</td>
+                    <td class="text-center fw-bold">${totalBk}</td>
+                    <td class="text-end fw-bold text-success">${totalRev.toLocaleString('vi-VN')} đ</td>
+                    <td class="text-end fw-bold text-warning">${totalCom.toLocaleString('vi-VN')} đ</td>
+                    <td class="text-end fw-bold text-primary">${totalPay.toLocaleString('vi-VN')} đ</td>
+                    <td></td>
+                </tr>`;
+        }
+
+        // ── Animate count ─────────────────────────────────────────────────
+        function animateCountValue(id, endVal, isCurrency) {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            const startVal = parseInt(obj.textContent.replace(/[^0-9]/g, '')) || 0;
+            if (startVal === endVal) return;
+            const duration = 800;
+            let startTime = null;
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress   = Math.min((timestamp - startTime) / duration, 1);
+                const currentVal = Math.floor(progress * (endVal - startVal) + startVal);
+                obj.textContent  = isCurrency ? currentVal.toLocaleString('vi-VN') + ' đ' : currentVal;
+                if (progress < 1) window.requestAnimationFrame(step);
+                else obj.textContent = isCurrency ? endVal.toLocaleString('vi-VN') + ' đ' : endVal;
+            }
+            window.requestAnimationFrame(step);
+        }
+
+        // ── Preset dates ──────────────────────────────────────────────────
+        function setPreset(preset, btnElement) {
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            const today = new Date();
+            let start = new Date(), end = new Date();
+            switch (preset) {
+                case 'today':     start = today; end = today; break;
+                case 'last7':     start.setDate(today.getDate() - 6); break;
+                case 'thismonth': start = new Date(today.getFullYear(), today.getMonth(), 1); break;
+                case 'lastmonth':
+                    start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    end   = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'thisyear':  start = new Date(today.getFullYear(), 0, 1); break;
+            }
+            document.getElementById('startDate').value = formatDate(start);
+            document.getElementById('endDate').value   = formatDate(end);
+            submitFilter(true);
+        }
+
+        function resetPresetActive() {
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1), day = '' + d.getDate();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2)   day   = '0' + day;
+            return [d.getFullYear(), month, day].join('-');
+        }
+
+        function updateExportUrl() {
+            const start = document.getElementById('startDate').value;
+            const end   = document.getElementById('endDate').value;
+            document.getElementById('btnExportCsv').href = `/Admin/ExportRevenueCsv?startDate=${start}&endDate=${end}`;
+        }
+
+        // ── Charts ────────────────────────────────────────────────────────
+        function renderTrendChart(chartData) {
+            const ctx      = document.getElementById('trendChart').getContext('2d');
+            const labels   = chartData.map(d => d.Label   || d.label);
+            const revenues = chartData.map(d => d.Revenue  || d.revenue  || 0);
+            const comms    = chartData.map(d => d.Commission || d.commission || 0);
+            if (trendChartInstance) trendChartInstance.destroy();
+            trendChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Hoa hồng hệ thống (10%)',
+                            data: comms,
+                            type: 'line',
+                            borderColor: '#ea580c',
+                            borderWidth: 3,
+                            backgroundColor: 'transparent',
+                            pointBackgroundColor: '#ea580c',
+                            pointRadius: 4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Doanh thu gộp',
+                            data: revenues,
+                            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                            borderColor: '#10b981',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: 'Plus Jakarta Sans', weight: 'bold' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    let lbl = ctx.dataset.label + ': ';
+                                    if (ctx.parsed.y !== null) lbl += ctx.parsed.y.toLocaleString('vi-VN') + ' đ';
+                                    return lbl;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => (v / 1000000).toFixed(1) + 'M' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderStatusChart(statusData) {
+            const ctx    = document.getElementById('statusChart').getContext('2d');
+            const labels = statusData.map(d => translateStatus(d.Status || d.status));
+            const counts = statusData.map(d => d.Count || d.count || 0);
+            if (statusChartInstance) statusChartInstance.destroy();
+            const colorMap = {
+                'Đã duyệt': '#10b981', 'Đã hoàn thành': '#0284c7',
+                'Chờ duyệt': '#f59e0b', 'Đã hủy': '#ef4444', 'Thất bại': '#ef4444'
+            };
+            statusChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{ data: counts, backgroundColor: labels.map(l => colorMap[l] || '#64748b'), borderWidth: 2, borderColor: '#fff' }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { family: 'Plus Jakarta Sans', weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+
+        function renderTopCarsChart(topCars) {
+            if (!topCars || topCars.length === 0) return;
+            const ctx    = document.getElementById('topCarsChart').getContext('2d');
+            const labels = topCars.map(c => c.CarName    || c.carName    || '');
+            const values = topCars.map(c => c.TotalRevenue || c.totalRevenue || 0);
+            if (topCarsChartInstance) topCarsChartInstance.destroy();
+            topCarsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: values,
+                        backgroundColor: ['#0284c7','#10b981','#f59e0b','#8b5cf6','#e11d48'],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ctx.parsed.x.toLocaleString('vi-VN') + ' đ' } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { callback: v => (v / 1000000).toFixed(1) + 'M' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderTopOwnersChart(ownerStats) {
+            if (!ownerStats || ownerStats.length === 0) return;
+            const ctx    = document.getElementById('topOwnersChart').getContext('2d');
+            const top5   = ownerStats.slice(0, 5);
+            const labels = top5.map(o => o.ownerName  || o.OwnerName  || 'N/A');
+            const values = top5.map(o => o.totalRevenue || o.TotalRevenue || 0);
+            if (topOwnersChartInstance) topOwnersChartInstance.destroy();
+            topOwnersChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: values,
+                        backgroundColor: ['#f59e0b','#94a3b8','#b45309','#0284c7','#10b981'],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ctx.parsed.x.toLocaleString('vi-VN') + ' đ' } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { callback: v => (v / 1000000).toFixed(1) + 'M' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // ── Booking table filter + pagination ─────────────────────────────
+        function filterAndPaginateTable() {
+            const query  = document.getElementById('tableSearch').value.toLowerCase().trim();
+            const status = document.getElementById('statusFilter').value;
+            filteredBookings = allBookings.filter(b => {
+                const matchQuery = !query ||
+                    b.bookingId.toString().includes(query) ||
+                    b.customerName.toLowerCase().includes(query) ||
+                    b.ownerName.toLowerCase().includes(query) ||
+                    b.carName.toLowerCase().includes(query) ||
+                    b.licensePlate.toLowerCase().includes(query);
+                const matchStatus = !status || b.status === status;
+                return matchQuery && matchStatus;
+            });
+            currentPage = 1;
+            paginateTable();
+        }
+
+        function paginateTable() {
+            const totalItems  = filteredBookings.length;
+            const totalPages  = Math.ceil(totalItems / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            const startIdx    = (currentPage - 1) * pageSize;
+            const endIdx      = Math.min(startIdx + pageSize, totalItems);
+            const displayList = filteredBookings.slice(startIdx, endIdx);
+            const tbody       = document.getElementById('tableBody');
+            tbody.innerHTML   = '';
+
+            if (displayList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-receipt fs-2 mb-3 d-block text-secondary"></i>
+                    Không có bản ghi giao dịch nào.</td></tr>`;
+            } else {
+                displayList.forEach(b => {
+                    const sc = b.status.toLowerCase();
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="fw-bold text-dark">#${b.bookingId}</td>
+                            <td>${b.customerName}</td>
+                            <td class="fw-bold">${b.carName}</td>
+                            <td><span class="badge bg-light text-dark border">${b.licensePlate}</span></td>
+                            <td class="text-muted" style="font-size:0.85rem;">${b.ownerName}</td>
+                            <td style="font-size: 0.85rem;">
+                                <div><i class="fa-regular fa-calendar-check text-success me-1"></i>${b.startDate}</div>
+                                <div><i class="fa-regular fa-calendar-xmark text-danger me-1"></i>${b.endDate}</div>
+                                <div class="text-muted fw-semibold mt-1">(${b.totalDays} ngày)</div>
+                            </td>
+                            <td class="text-end fw-bold text-dark">${b.subtotalFee.toLocaleString('vi-VN')} đ</td>
+                            <td class="text-end fw-bold" style="color:#ea580c;">${b.platformCommission.toLocaleString('vi-VN')} đ</td>
+                            <td class="text-end fw-bold text-success">${b.ownerPayout.toLocaleString('vi-VN')} đ</td>
+                            <td><span class="status-badge status-${sc}">${translateStatus(b.status)}</span></td>
+                        </tr>`;
+                });
+            }
+
+            const summaryObj = document.getElementById('tableSummary');
+            summaryObj.textContent = totalItems === 0
+                ? 'Hiển thị 0 - 0 trên 0 bản ghi'
+                : `Hiển thị ${startIdx + 1} - ${endIdx} trên ${totalItems} bản ghi`;
+
+            const paginationControls  = document.getElementById('paginationControls');
+            paginationControls.innerHTML = '';
+            if (totalPages > 1) {
+                paginationControls.innerHTML += `<a href="javascript:void(0)" class="page-link-custom ${currentPage === 1 ? 'disabled opacity-50' : ''}"
+                    onclick="${currentPage > 1 ? `changePage(${currentPage - 1})` : ''}">&laquo;</a>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationControls.innerHTML += `<a href="javascript:void(0)" class="page-link-custom ${currentPage === i ? 'active' : ''}"
+                        onclick="changePage(${i})">${i}</a>`;
+                }
+                paginationControls.innerHTML += `<a href="javascript:void(0)" class="page-link-custom ${currentPage === totalPages ? 'disabled opacity-50' : ''}"
+                    onclick="${currentPage < totalPages ? `changePage(${currentPage + 1})` : ''}">&raquo;</a>`;
+            }
+        }
+
+        function changePage(page) { currentPage = page; paginateTable(); }
+    </script>
+}

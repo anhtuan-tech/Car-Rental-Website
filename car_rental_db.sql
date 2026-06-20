@@ -25,6 +25,7 @@ CREATE TABLE Users (
 );
 
 -- 3. TẠO BẢNG HỒ SƠ CHI TIẾT CÁ NÂN (PROFILES)
+-- 3. TẠO BẢNG HỒ SƠ CHI TIẾT CÁ NHÂN (PROFILES)
 CREATE TABLE Profiles (
     profile_id INT IDENTITY(1,1) NOT NULL,
     user_id INT NOT NULL,
@@ -36,10 +37,20 @@ CREATE TABLE Profiles (
     
     CONSTRAINT PK_Profiles PRIMARY KEY (profile_id),
     CONSTRAINT UC_ProfileUser UNIQUE (user_id),
-    CONSTRAINT UC_DriverLicense UNIQUE (driver_license_no),
-    CONSTRAINT UC_IdCard UNIQUE (id_card_no),
+    -- ĐÃ XÓA CONSTRAINT UC_DriverLicense Ở ĐÂY
+    -- ĐÃ XÓA CONSTRAINT UC_IdCard Ở ĐÂY
     CONSTRAINT FK_Profiles_Users FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
+
+-- TẠO CHỈ MỤC DUY NHẤT CÓ BỘ LỌC (Cho phép nhiều tài khoản để trống NULL bằng lái & CCCD)
+CREATE UNIQUE NONCLUSTERED INDEX UC_DriverLicense 
+ON Profiles(driver_license_no) 
+WHERE driver_license_no IS NOT NULL;
+
+CREATE UNIQUE NONCLUSTERED INDEX UC_IdCard 
+ON Profiles(id_card_no) 
+WHERE id_card_no IS NOT NULL;
+
 
 -- 4. TẠO BẢNG PHÂN LOẠI XE (CAR TYPES)
 CREATE TABLE CarTypes (

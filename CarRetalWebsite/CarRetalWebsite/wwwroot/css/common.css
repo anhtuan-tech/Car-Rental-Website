@@ -1,0 +1,175 @@
+:root {
+    --primary-color: #0284c7; /* Ocean Blue */
+    --primary-hover: #0369a1;
+    --primary-light: #e0f2fe;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --bg-light: #f8fafc;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+}
+
+/* Custom Buttons */
+.btn-outline-custom {
+    color: var(--primary-color) !important;
+    border: 2px solid var(--primary-color) !important;
+    background-color: transparent;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-outline-custom:hover {
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+}
+
+.btn-primary-custom {
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    padding: 8px 24px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+    display: inline-block;
+}
+
+.btn-primary-custom:hover {
+    background-color: var(--primary-hover) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+/* Car Card Styling (Global) */
+.car-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+}
+
+.car-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(2, 132, 199, 0.15);
+}
+
+.car-card-img-wrapper {
+    position: relative;
+    overflow: hidden;
+    height: 220px;
+    background-color: #f1f5f9;
+}
+
+.car-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.car-card:hover .car-card-img {
+    transform: scale(1.08);
+}
+
+.car-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: rgba(2, 132, 199, 0.9);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    border-radius: 50px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.car-card-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.car-name {
+    font-weight: 700;
+    font-size: 1.35rem;
+    margin-bottom: 6px;
+    color: var(--text-dark);
+    transition: color 0.3s ease;
+}
+
+.car-card:hover .car-name {
+    color: var(--primary-color);
+}
+
+.car-brand {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+}
+
+.car-specs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.spec-badge {
+    background-color: #f8fafc;
+    border: 1px solid #f1f5f9;
+    color: var(--text-dark);
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.car-card:hover .spec-badge {
+    background-color: var(--primary-light);
+    border-color: transparent;
+    color: var(--primary-color);
+}
+
+.car-price-wrapper {
+    border-top: 1.5px solid #f1f5f9;
+    padding-top: 18px;
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.car-price {
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--primary-color);
+}
+
+.price-unit {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}

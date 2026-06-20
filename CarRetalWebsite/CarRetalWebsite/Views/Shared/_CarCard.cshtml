@@ -1,0 +1,47 @@
+﻿@model CarRetalWebsite.Models.Car
+@{
+    var imageUrl = Model.CarImages?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                   ?? Model.CarImages?.FirstOrDefault()?.ImageUrl 
+                   ?? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80";
+
+    var transmission = "Số tự động";
+    if (!string.IsNullOrEmpty(Model.SpecsJson) && Model.SpecsJson.Contains("Số sàn"))
+    {
+        transmission = "Số sàn";
+    }
+
+    var fuel = "Xăng";
+    if (!string.IsNullOrEmpty(Model.SpecsJson) && (Model.SpecsJson.Contains("Dầu") || Model.SpecsJson.Contains("Diesel")))
+    {
+        fuel = "Dầu";
+    }
+}
+<div class="car-card">
+    <div class="car-card-img-wrapper">
+        <img src="@imageUrl" alt="@Model.CarName" class="car-card-img" />
+        <span class="car-badge">@Model.Type?.TypeName</span>
+    </div>
+    <div class="car-card-body">
+        <h3 class="car-name">@Model.CarName</h3>
+        <div class="car-brand">Hãng xe: @Model.Brand</div>
+        
+        <div class="car-specs">
+            <div class="spec-badge" title="Hộp số">
+                <i class="fa-solid fa-gears text-primary-custom"></i> @transmission
+            </div>
+            <div class="spec-badge" title="Nhiên liệu">
+                <i class="fa-solid fa-gas-pump text-primary-custom"></i> @fuel
+            </div>
+        </div>
+        
+        <div class="car-price-wrapper">
+            <div>
+                <span class="car-price">@Model.PricePerDay.ToString("N0")</span>
+                <span class="price-unit">đ/ngày</span>
+            </div>
+            <a href="/Car/Details/@Model.CarId" class="btn-primary-custom py-2 px-3 btn-sm border-0">
+                Chi tiết <i class="fa-solid fa-angle-right"></i>
+            </a>
+        </div>
+    </div>
+</div>

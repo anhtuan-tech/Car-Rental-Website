@@ -1,49 +1,286 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CarRetalWebsite</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/CarRetalWebsite.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - CarRental</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="~/favicon.png" asp-append-version="true" />
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    
+    <!-- FontAwesome 6 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+    
+    <!-- Common Shared CSS -->
+    <link href="~/css/common.css" rel="stylesheet" />
+    
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar Styling */
+        .navbar-custom {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 15px rgba(15, 23, 42, 0.04);
+            padding: 15px 0;
+            transition: all 0.3s ease;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand-custom {
+            font-weight: 800;
+            font-size: 1.6rem;
+            color: var(--primary-color) !important;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand-custom i {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .navbar-brand-custom:hover i {
+            transform: scale(1.2) rotate(-5deg);
+        }
+
+        .nav-link-custom {
+            font-weight: 600;
+            color: var(--text-dark) !important;
+            padding: 8px 18px !important;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-link-custom:hover, .nav-link-custom.active {
+            color: var(--primary-color) !important;
+            background-color: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        /* Profile Dropdown */
+        .user-dropdown-btn {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 16px;
+            border-radius: 50px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+        }
+
+        .user-dropdown-btn:hover {
+            background-color: var(--bg-light);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .avatar-img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+            transition: transform 0.3s ease;
+        }
+
+        .user-dropdown-btn:hover .avatar-img {
+            transform: rotate(5deg) scale(1.05);
+        }
+
+        .dropdown-menu-custom {
+            border: none;
+            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+            border-radius: 16px;
+            padding: 10px;
+            min-width: 220px;
+            margin-top: 15px !important;
+            display: block;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dropdown-menu-custom.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item-custom {
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--text-dark);
+            font-weight: 550;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            transform: translateX(4px);
+        }
+
+        /* Footer */
+        footer {
+            background-color: #ffffff;
+            box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.02);
+            padding: 30px 0;
+            margin-top: auto;
+            border-top: 1px solid #f1f5f9;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CarRetalWebsite</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-lg navbar-custom">
+            <div class="container">
+                <!-- Brand logo -->
+                <a class="navbar-brand navbar-brand-custom" asp-controller="Home" asp-action="Index">
+                    <i class="fa-solid fa-car-side"></i>
+                    <span>CarRental</span>
+                </a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <!-- Nav links -->
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link nav-link-custom active" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link nav-link-custom" href="/Car">Khám phá xe</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom" href="/Home/About">Về chúng tôi</a>
                         </li>
                     </ul>
+                    
+                    <!-- Right menu: auth status -->
+                    <div class="d-flex align-items-center gap-3">
+                        @if (User.Identity == null || !User.Identity.IsAuthenticated)
+                        {
+                            <a href="/Account/Register" class="btn-outline-custom">Đăng ký</a>
+                            <a asp-controller="Account" asp-action="Login" class="btn-primary-custom">Đăng nhập</a>
+                        }
+                        else
+                        {
+                            // Lấy avatar url từ claim, sinh placeholder nếu trống
+                            var avatarUrl = User.FindFirst("AvatarUrl")?.Value;
+                            var userName = User.Identity?.Name ?? "Người dùng";
+                            if (string.IsNullOrWhiteSpace(avatarUrl))
+                            {
+                                avatarUrl = "/images/default-avatar.svg";
+                            }
+                            
+                            <div class="dropdown">
+                                <div class="user-dropdown-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="@avatarUrl" alt="Avatar" class="avatar-img" />
+                                    <span class="fw-semibold d-none d-md-inline">@userName</span>
+                                    <i class="fa-solid fa-chevron-down text-muted fs-7"></i>
+                                </div>
+                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
+                                    <li>
+                                        <a class="dropdown-item dropdown-item-custom" href="/Profile">
+                                            <i class="fa-regular fa-user text-primary-custom"></i> Hồ sơ cá nhân
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item dropdown-item-custom" href="/MyBookings">
+                                            <i class="fa-solid fa-receipt text-primary-custom"></i> Chuyến đi của tôi
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item dropdown-item-custom text-danger" asp-controller="Account" asp-action="Logout">
+                                            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+    <div class="flex-grow-1">
+        @RenderBody()
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - CarRetalWebsite - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer>
+        <div class="container text-center">
+            <p class="mb-1 text-dark fw-semibold">&copy; @DateTime.Now.Year - CarRental. Bảo lưu mọi quyền.</p>
+            <p class="text-muted mb-0 fs-7">Hệ thống thuê xe tự lái uy tín hàng đầu Việt Nam. Hỗ trợ 24/7.</p>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Global Toast Alert Script -->
+    <script>
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            showCloseButton: true,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        @if (TempData["LoginSuccess"] != null)
+        {
+            <text>
+            Toast.fire({
+                icon: 'success',
+                title: 'Đăng nhập thành công!'
+            });
+            </text>
+        }
+        @if (TempData["LogoutSuccess"] != null)
+        {
+            <text>
+            Toast.fire({
+                icon: 'success',
+                title: 'Đăng xuất thành công!'
+            });
+            </text>
+        }
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,0 +1,318 @@
+﻿@{
+    ViewData["Title"] = "Về chúng tôi";
+}
+
+<style>
+    /* Keyframe Animations */
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-up {
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .delay-1 { animation-delay: 0.15s; opacity: 0; }
+    .delay-2 { animation-delay: 0.3s; opacity: 0; }
+    .delay-3 { animation-delay: 0.45s; opacity: 0; }
+
+    /* Hero Banner */
+    .about-hero {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(2, 132, 199, 0.7)), 
+                    url('https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1920&q=80') no-repeat center center;
+        background-size: cover;
+        padding: 100px 0;
+        color: #ffffff;
+        text-align: center;
+        border-radius: 0 0 30px 30px;
+        margin-bottom: 60px;
+    }
+
+    .about-hero-title {
+        font-weight: 800;
+        font-size: 3rem;
+        margin-bottom: 20px;
+        letter-spacing: -0.5px;
+    }
+
+    .about-hero-desc {
+        font-size: 1.25rem;
+        max-width: 700px;
+        margin: 0 auto;
+        opacity: 0.95;
+        font-weight: 300;
+        line-height: 1.6;
+    }
+
+    /* Core Values */
+    .value-card {
+        background-color: #ffffff;
+        border-radius: 20px;
+        padding: 35px 25px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        text-align: center;
+        height: 100%;
+    }
+
+    .value-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(2, 132, 199, 0.12);
+        border-color: var(--primary-light);
+    }
+
+    .value-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        margin: 0 auto 25px;
+        font-size: 1.8rem;
+        transition: all 0.3s ease;
+    }
+
+    .value-card:hover .value-icon-wrapper {
+        background-color: var(--primary-color);
+        color: #ffffff;
+        transform: scale(1.05) rotate(5deg);
+    }
+
+    .value-title {
+        font-weight: 750;
+        font-size: 1.25rem;
+        margin-bottom: 12px;
+        color: var(--text-dark);
+    }
+
+    .value-desc {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Stats Section */
+    .stats-section {
+        background-color: var(--primary-color);
+        color: #ffffff;
+        padding: 60px 0;
+        border-radius: 24px;
+        margin: 60px 0;
+        box-shadow: 0 15px 35px rgba(2, 132, 199, 0.25);
+    }
+
+    .stat-box {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .stat-label {
+        font-weight: 500;
+        opacity: 0.9;
+        font-size: 1.05rem;
+    }
+
+    /* Steps Section */
+    .steps-timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .step-item {
+        background-color: #ffffff;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
+        transition: all 0.3s ease;
+        position: relative;
+        height: 100%;
+    }
+
+    .step-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .step-num {
+        position: absolute;
+        top: -15px;
+        left: 25px;
+        width: 35px;
+        height: 35px;
+        background-color: var(--primary-color);
+        color: #ffffff;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.05rem;
+        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+    }
+
+    .step-title {
+        font-weight: 700;
+        font-size: 1.15rem;
+        margin-top: 5px;
+        margin-bottom: 12px;
+        color: var(--text-dark);
+    }
+
+    .step-desc {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+</style>
+
+<!-- About Hero -->
+<section class="about-hero animate-up">
+    <div class="container">
+        <h1 class="about-hero-title">Chúng tôi là CarRental</h1>
+        <p class="about-hero-desc">Đơn vị hàng đầu cung cấp dịch vụ thuê xe tự lái uy tín, minh bạch và an toàn tại Việt Nam. Chúng tôi đồng hành cùng bạn trên mọi hành trình khám phá cuộc sống.</p>
+    </div>
+</section>
+
+<!-- Core Values -->
+<section class="container mb-5 py-3">
+    <div class="text-center mb-5 animate-up delay-1">
+        <h2 class="section-title">Giá Trị Cốt Lõi</h2>
+        <p class="text-muted">Chúng tôi xây dựng niềm tin từ chất lượng dịch vụ và sự hài lòng tuyệt đối của khách hàng.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center animate-up delay-2">
+        <div class="col-lg-3 col-md-6">
+            <div class="value-card">
+                <div class="value-icon-wrapper">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h3 class="value-title">An Toàn Tuyệt Đối</h3>
+                <p class="value-desc">Mọi phương tiện đều được mua bảo hiểm thân vỏ và kiểm định định kỳ khắt khe trước khi giao nhận xe.</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="value-card">
+                <div class="value-icon-wrapper">
+                    <i class="fa-solid fa-handshake"></i>
+                </div>
+                <h3 class="value-title">Sự Tin Cậy</h3>
+                <p class="value-desc">Thủ tục nhanh chóng, duyệt thông tin bằng lái chuyên nghiệp, hoàn trả cọc nhanh gọn minh bạch.</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="value-card">
+                <div class="value-icon-wrapper">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                </div>
+                <h3 class="value-title">Giá Cả Minh Bạch</h3>
+                <p class="value-desc">Giá thuê và phí dịch vụ niêm yết rõ ràng, tính toán tự động chính xác, tuyệt đối không có chi phí ẩn phát sinh.</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="value-card">
+                <div class="value-icon-wrapper">
+                    <i class="fa-solid fa-headset"></i>
+                </div>
+                <h3 class="value-title">Hỗ Trợ 24/7</h3>
+                <p class="value-desc">Đội ngũ chăm sóc khách hàng nhiệt tình, luôn túc trực hỗ trợ giải quyết sự cố kỹ thuật trên mọi chặng đường.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="container animate-up delay-2">
+    <div class="stats-section">
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4 col-sm-6">
+                <div class="stat-box">
+                    <span class="stat-number">10K+</span>
+                    <span class="stat-label">Chuyến đi thành công</span>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="stat-box">
+                    <span class="stat-number">500+</span>
+                    <span class="stat-label">Xe chất lượng cao</span>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="stat-box">
+                    <span class="stat-number">4.9★</span>
+                    <span class="stat-label">Đánh giá hài lòng</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Steps Section / Timeline -->
+<section class="container mb-5 py-4">
+    <div class="text-center mb-5 animate-up delay-3">
+        <h2 class="section-title">Quy Trình Hoạt Động</h2>
+        <p class="text-muted">Trải nghiệm quy trình khép kín, an toàn và chuyên nghiệp chỉ với vài bước đơn giản.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center steps-timeline animate-up delay-3">
+        <div class="col-lg-4 col-md-6">
+            <div class="step-item">
+                <span class="step-num">1</span>
+                <h4 class="step-title">Xác Thực Người Dùng</h4>
+                <p class="step-desc">Khách hàng đăng nhập, cập nhật đầy đủ thông tin cá nhân và giấy phép lái xe để bảo đảm đủ điều kiện tự lái xe.</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="step-item">
+                <span class="step-num">2</span>
+                <h4 class="step-title">Tìm Kiếm & Chọn Xe</h4>
+                <p class="step-desc">Khám phá hàng trăm loại xe khác nhau, lọc theo phân loại (Sedan, SUV...) để tìm kiếm chiếc xe ưng ý nhất.</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="step-item">
+                <span class="step-num">3</span>
+                <h4 class="step-title">Tạo Đơn & Kiểm Duyệt</h4>
+                <p class="step-desc">Gửi thông tin đặt xe, đội ngũ Admin/Staff sẽ nhanh chóng kiểm duyệt bằng lái xe và giấy tờ xe của chủ sở hữu xe.</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="step-item">
+                <span class="step-num">4</span>
+                <h4 class="step-title">Thanh Toán Trực Tuyến</h4>
+                <p class="step-desc">Sau khi đơn được duyệt, thực hiện chuyển khoản an toàn để hoàn tất thanh toán và đặt chỗ xe chính thức.</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="step-item">
+                <span class="step-num">5</span>
+                <h4 class="step-title">Trải Nghiệm Chuyến Đi</h4>
+                <p class="step-desc">Nhận bàn giao xe theo lịch hẹn, tự do trải nghiệm hành trình an toàn, đầy cảm hứng cùng bạn bè và gia đình.</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="step-item">
+                <span class="step-num">6</span>
+                <h4 class="step-title">Đánh Giá Phản Hồi</h4>
+                <p class="step-desc">Trả xe và chấm điểm dịch vụ, góp ý giúp nâng cấp chất lượng để nhận phản hồi từ chủ xe thân thiện.</p>
+            </div>
+        </div>
+    </div>
+</section>
