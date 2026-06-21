@@ -12,6 +12,8 @@ namespace CarRetalWebsite
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddMemoryCache();
+            builder.Services.AddScoped<CarRetalWebsite.Services.EmailService>();
             builder.Services.AddDbContext<CarRentalDbContext>();
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>

@@ -67,15 +67,17 @@ namespace CarRetalWebsite.Controllers
         {
             var query = _context.Users
                 .Include(u => u.Profile)
-                .Where(u => u.RoleId == 2); // Staff
+                .Where(u => u.RoleId == 2 && u.Status != "Deleted"); // Staff
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                search = search.Trim().ToLower();
+                search = search.Trim();
+                if (search.Length > 100) search = search.Substring(0, 100);
+                var searchLower = search.ToLower();
                 query = query.Where(u => 
-                    u.Email.ToLower().Contains(search) || 
-                    u.PhoneNumber.ToLower().Contains(search) || 
-                    (u.Profile != null && u.Profile.FullName.ToLower().Contains(search))
+                    u.Email.ToLower().Contains(searchLower) || 
+                    u.PhoneNumber.ToLower().Contains(searchLower) || 
+                    (u.Profile != null && u.Profile.FullName.ToLower().Contains(searchLower))
                 );
             }
 
@@ -140,15 +142,36 @@ namespace CarRetalWebsite.Controllers
                 return Json(new { success = false, message = "Vui lòng nhập đầy đủ tất cả các trường." });
             }
 
+            if (!System.Text.RegularExpressions.Regex.IsMatch(email, @"^[\w\.-]+@[\w\.-]+\.\w+$"))
+            {
+                return Json(new { success = false, message = "Địa chỉ Email không đúng định dạng." });
+            }
+
+            if (password.Length < 6)
+            {
+                return Json(new { success = false, message = "Mật khẩu phải chứa ít nhất 6 ký tự." });
+            }
+
             if (password != confirmPassword)
             {
                 return Json(new { success = false, message = "Mật khẩu xác nhận không khớp." });
             }
 
-            var duplicate = await _context.Users.AnyAsync(u => u.Email == email || u.PhoneNumber == phoneNumber);
-            if (duplicate)
+            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^\d{10,}$"))
             {
-                return Json(new { success = false, message = "Email hoặc Số điện thoại đã được đăng ký." });
+                return Json(new { success = false, message = "Số điện thoại phải chỉ gồm các chữ số và có độ dài từ 10 ký tự trở lên." });
+            }
+
+            var duplicateEmail = await _context.Users.AnyAsync(u => u.Email == email);
+            if (duplicateEmail)
+            {
+                return Json(new { success = false, message = "Địa chỉ Email đã được sử dụng." });
+            }
+
+            var duplicatePhone = await _context.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
+            if (duplicatePhone)
+            {
+                return Json(new { success = false, message = "Số điện thoại đã được đăng ký." });
             }
 
             var newUser = new User
@@ -183,7 +206,7 @@ namespace CarRetalWebsite.Controllers
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Tạo tài khoản Nhân viên thành công!" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Json(new { success = false, message = "Đã xảy ra lỗi khi lưu dữ liệu. Vui lòng thử lại." });
             }
@@ -195,6 +218,10 @@ namespace CarRetalWebsite.Controllers
         [HttpGet]
         public async Task<IActionResult> GetStaffDetails(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest("ID không hợp lệ.");
+            }
             var user = await _context.Users
                 .Include(u => u.Profile)
                 .FirstOrDefaultAsync(u => u.UserId == id && u.RoleId == 2);
@@ -223,9 +250,24 @@ namespace CarRetalWebsite.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStaff(int userId, string fullName, string phoneNumber, string status, IFormFile? avatarFile)
         {
+            if (userId <= 0)
+            {
+                return Json(new { success = false, message = "ID nhân viên không hợp lệ." });
+            }
+
             if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(status))
             {
                 return Json(new { success = false, message = "Vui lòng điền đầy đủ các thông tin." });
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^\d{10,}$"))
+            {
+                return Json(new { success = false, message = "Số điện thoại phải chỉ gồm các chữ số và có độ dài từ 10 ký tự trở lên." });
+            }
+
+            if (status != "Active" && status != "Inactive" && status != "Banned" && status != "Deleted")
+            {
+                return Json(new { success = false, message = "Trạng thái tài khoản không hợp lệ." });
             }
 
             var user = await _context.Users
@@ -269,7 +311,7 @@ namespace CarRetalWebsite.Controllers
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Cập nhật tài khoản nhân viên thành công!" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Json(new { success = false, message = "Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại." });
             }
@@ -282,6 +324,21 @@ namespace CarRetalWebsite.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteStaff(int id)
         {
+            if (id <= 0)
+            {
+                return Json(new { success = false, message = "ID nhân viên không hợp lệ." });
+            }
+
+            var adminEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+            if (!string.IsNullOrEmpty(adminEmail))
+            {
+                var admin = await _context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
+                if (admin != null && admin.UserId == id)
+                {
+                    return Json(new { success = false, message = "Bạn không thể tự xóa tài khoản của chính mình." });
+                }
+            }
+
             var user = await _context.Users
                 .Include(u => u.Profile)
                 .FirstOrDefaultAsync(u => u.UserId == id && u.RoleId == 2);
@@ -293,18 +350,14 @@ namespace CarRetalWebsite.Controllers
 
             try
             {
-                if (user.Profile != null)
-                {
-                    DeleteOldAvatarFile(user.Profile.AvatarUrl);
-                    _context.Profiles.Remove(user.Profile);
-                }
-                _context.Users.Remove(user);
+                user.Status = "Deleted";
+                user.UpdatedAt = DateTime.Now;
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Đã xóa tài khoản nhân viên thành công!" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { success = false, message = "Không thể xóa nhân viên này vì còn có dữ liệu ràng buộc. Vui lòng kiểm tra lại." });
+                return Json(new { success = false, message = "Đã xảy ra lỗi khi xóa nhân viên này. Vui lòng thử lại." });
             }
         }
 
@@ -317,7 +370,7 @@ namespace CarRetalWebsite.Controllers
             var query = _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Profile)
-                .Where(u => u.RoleId == 3 || u.RoleId == 4); // Customer or Owner
+                .Where(u => (u.RoleId == 3 || u.RoleId == 4) && u.Status != "Deleted"); // Customer or Owner
 
             if (!string.IsNullOrWhiteSpace(role))
             {
@@ -327,11 +380,13 @@ namespace CarRetalWebsite.Controllers
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                search = search.Trim().ToLower();
+                search = search.Trim();
+                if (search.Length > 100) search = search.Substring(0, 100);
+                var searchLower = search.ToLower();
                 query = query.Where(u => 
-                    u.Email.ToLower().Contains(search) || 
-                    u.PhoneNumber.ToLower().Contains(search) || 
-                    (u.Profile != null && u.Profile.FullName.ToLower().Contains(search))
+                    u.Email.ToLower().Contains(searchLower) || 
+                    u.PhoneNumber.ToLower().Contains(searchLower) || 
+                    (u.Profile != null && u.Profile.FullName.ToLower().Contains(searchLower))
                 );
             }
 
@@ -380,9 +435,19 @@ namespace CarRetalWebsite.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateUserStatus(int userId, string status)
         {
+            if (userId <= 0)
+            {
+                return Json(new { success = false, message = "ID người dùng không hợp lệ." });
+            }
+
             if (string.IsNullOrWhiteSpace(status))
             {
                 return Json(new { success = false, message = "Trạng thái không hợp lệ." });
+            }
+
+            if (status != "Active" && status != "Inactive" && status != "Banned" && status != "Deleted")
+            {
+                return Json(new { success = false, message = "Trạng thái tài khoản không hợp lệ." });
             }
 
             var user = await _context.Users
@@ -396,12 +461,22 @@ namespace CarRetalWebsite.Controllers
             user.Status = status;
             user.UpdatedAt = DateTime.Now;
 
+            // Ràng buộc: Nếu Owner bị chuyển sang trạng thái khác Active (Deleted, Inactive, Banned), tự động tắt hoạt động xe của họ
+            if (user.RoleId == 4 && status != "Active")
+            {
+                var cars = await _context.Cars.Where(c => c.OwnerId == userId).ToListAsync();
+                foreach (var car in cars)
+                {
+                    car.Status = "Unavailable";
+                }
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Cập nhật trạng thái người dùng thành công!" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Json(new { success = false, message = "Đã xảy ra lỗi khi cập nhật trạng thái. Vui lòng thử lại." });
             }
@@ -414,6 +489,11 @@ namespace CarRetalWebsite.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUser(int id)
         {
+            if (id <= 0)
+            {
+                return Json(new { success = false, message = "ID người dùng không hợp lệ." });
+            }
+
             var user = await _context.Users
                 .Include(u => u.Profile)
                 .FirstOrDefaultAsync(u => u.UserId == id && (u.RoleId == 3 || u.RoleId == 4));
@@ -423,19 +503,43 @@ namespace CarRetalWebsite.Controllers
                 return Json(new { success = false, message = "Không tìm thấy tài khoản người dùng cần xóa." });
             }
 
+            // Kiểm tra ràng buộc: Nếu khách hàng đang có đơn đặt xe chưa hoàn thành, chặn xóa
+            if (user.RoleId == 3)
+            {
+                var activeBooking = await _context.Bookings.AnyAsync(b => b.CustomerId == id && b.Status != "Completed" && b.Status != "Cancelled");
+                if (activeBooking)
+                {
+                    return Json(new { success = false, message = "Không thể xóa khách hàng này do đang có chuyến đi chưa hoàn thành." });
+                }
+            }
+
+            // Kiểm tra ràng buộc: Nếu chủ xe đang có xe có đơn đặt chưa hoàn thành, chặn xóa
+            if (user.RoleId == 4)
+            {
+                var activeOwnerBooking = await _context.Bookings.AnyAsync(b => b.Car.OwnerId == id && b.Status != "Completed" && b.Status != "Cancelled");
+                if (activeOwnerBooking)
+                {
+                    return Json(new { success = false, message = "Không thể xóa chủ xe này do đang có đơn đặt xe chưa hoàn thành liên kết với xe của họ." });
+                }
+
+                // Tự động chuyển toàn bộ xe của người đó sang trạng thái Unavailable
+                var cars = await _context.Cars.Where(c => c.OwnerId == id).ToListAsync();
+                foreach (var car in cars)
+                {
+                    car.Status = "Unavailable";
+                }
+            }
+
             try
             {
-                if (user.Profile != null)
-                {
-                    _context.Profiles.Remove(user.Profile);
-                }
-                _context.Users.Remove(user);
+                user.Status = "Deleted";
+                user.UpdatedAt = DateTime.Now;
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Đã xóa tài khoản người dùng thành công!" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { success = false, message = "Không thể xóa thành viên này vì đã có dữ liệu liên quan (lịch sử đặt xe, đánh giá...). Vui lòng kiểm tra lại." });
+                return Json(new { success = false, message = "Đã xảy ra lỗi khi xóa thành viên này. Vui lòng thử lại." });
             }
         }
 
@@ -445,6 +549,22 @@ namespace CarRetalWebsite.Controllers
         [HttpGet]
         public async Task<IActionResult> RevenueReport(DateTime? startDate, DateTime? endDate)
         {
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                if (startDate.Value > endDate.Value)
+                {
+                    TempData["RevenueError"] = "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.";
+                    startDate = null;
+                    endDate = null;
+                }
+                else if ((endDate.Value - startDate.Value).TotalDays > 366)
+                {
+                    TempData["RevenueError"] = "Khoảng thời gian báo cáo không được vượt quá 1 năm.";
+                    startDate = null;
+                    endDate = null;
+                }
+            }
+
             var end = endDate ?? DateTime.Today.AddDays(1).AddSeconds(-1);
             var start = startDate ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
@@ -456,13 +576,18 @@ namespace CarRetalWebsite.Controllers
                 .ThenInclude(o => o.Profile)
                 .Where(b => b.CreatedAt >= start && b.CreatedAt <= end);
 
+            // Chỉ tính doanh thu dựa trên các đơn đặt xe có trạng thái thanh toán là Paid và Booking đã hoàn thành hoặc được duyệt
+            var revenueQuery = query.Where(b => (b.Status == "Completed" || b.Status == "Approved") 
+                                                && b.Payments.Any(p => p.PaymentStatus == "Paid"));
+
             var totalBookings = await query.CountAsync();
-            var totalRevenue = await query.SumAsync(b => b.SubtotalFee);
-            var totalCommission = await query.SumAsync(b => b.PlatformCommission);
-            var totalPayout = await query.SumAsync(b => b.OwnerPayout);
+            var totalRevenue = await revenueQuery.SumAsync(b => b.SubtotalFee);
+            var totalCommission = await revenueQuery.SumAsync(b => b.PlatformCommission);
+            var totalPayout = await revenueQuery.SumAsync(b => b.OwnerPayout);
 
             // ---- KPI bổ sung ----
-            var avgRevenue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
+            var validBookingsCount = await revenueQuery.CountAsync();
+            var avgRevenue = validBookingsCount > 0 ? totalRevenue / validBookingsCount : 0;
             var cancelledCount = await query.CountAsync(b => b.Status == "Cancelled");
             var cancellationRate = totalBookings > 0 ? Math.Round((double)cancelledCount / totalBookings * 100, 1) : 0;
 
@@ -471,7 +596,7 @@ namespace CarRetalWebsite.Controllers
 
             if (daysDifference <= 60)
             {
-                var grouped = await query
+                var grouped = await revenueQuery
                     .GroupBy(b => b.CreatedAt.Date)
                     .Select(g => new
                     {
@@ -500,7 +625,7 @@ namespace CarRetalWebsite.Controllers
             }
             else
             {
-                var grouped = await query
+                var grouped = await revenueQuery
                     .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
                     .Select(g => new
                     {
@@ -549,29 +674,34 @@ namespace CarRetalWebsite.Controllers
                     b.SubtotalFee,
                     b.PlatformCommission,
                     b.OwnerPayout,
-                    b.Status
+                    b.Status,
+                    IsPaid = b.Payments.Any(p => p.PaymentStatus == "Paid")
                 })
                 .ToListAsync();
 
             var ownerStatsData = bookingsForOwner
                 .GroupBy(b => b.OwnerId)
-                .Select(g => new
-                {
-                    OwnerId = g.Key,
-                    OwnerName = g.First().OwnerName,
-                    OwnerEmail = g.First().OwnerEmail,
-                    TotalCars = g.Select(b => b.CarId).Distinct().Count(),
-                    TotalBookings = g.Count(),
-                    TotalRevenue = g.Sum(b => b.SubtotalFee),
-                    TotalCommission = g.Sum(b => b.PlatformCommission),
-                    TotalPayout = g.Sum(b => b.OwnerPayout),
-                    AvgRevenue = g.Count() > 0 ? g.Sum(b => b.SubtotalFee) / g.Count() : 0
+                .Select(g => {
+                    var validList = g.Where(b => (b.Status == "Completed" || b.Status == "Approved") && b.IsPaid).ToList();
+                    return new
+                    {
+                        OwnerId = g.Key,
+                        OwnerName = g.First().OwnerName,
+                        OwnerEmail = g.First().OwnerEmail,
+                        TotalCars = g.Select(b => b.CarId).Distinct().Count(),
+                        TotalBookings = g.Count(),
+                        TotalRevenue = validList.Sum(b => b.SubtotalFee),
+                        TotalCommission = validList.Sum(b => b.PlatformCommission),
+                        TotalPayout = validList.Sum(b => b.OwnerPayout),
+                        AvgRevenue = validList.Count > 0 ? validList.Sum(b => b.SubtotalFee) / validList.Count : 0
+                    };
                 })
                 .OrderByDescending(o => o.TotalRevenue)
                 .ToList<object>();
 
             // ---- Top 5 xe doanh thu cao ----
             var topCarsData = bookingsForOwner
+                .Where(b => (b.Status == "Completed" || b.Status == "Approved") && b.IsPaid)
                 .GroupBy(b => b.CarId)
                 .Select(g => new
                 {
@@ -660,6 +790,22 @@ namespace CarRetalWebsite.Controllers
         [HttpGet]
         public async Task<IActionResult> OwnerRevenue(DateTime? startDate, DateTime? endDate)
         {
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                if (startDate.Value > endDate.Value)
+                {
+                    TempData["RevenueError"] = "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.";
+                    startDate = null;
+                    endDate = null;
+                }
+                else if ((endDate.Value - startDate.Value).TotalDays > 366)
+                {
+                    TempData["RevenueError"] = "Khoảng thời gian báo cáo không được vượt quá 1 năm.";
+                    startDate = null;
+                    endDate = null;
+                }
+            }
+
             var end   = endDate   ?? DateTime.Today.AddDays(1).AddSeconds(-1);
             var start = startDate ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
@@ -682,32 +828,37 @@ namespace CarRetalWebsite.Controllers
                     b.PlatformCommission,
                     b.OwnerPayout,
                     b.Status,
-                    b.CreatedAt
+                    b.CreatedAt,
+                    IsPaid = b.Payments.Any(p => p.PaymentStatus == "Paid")
                 })
                 .ToListAsync();
 
             var ownerStats = bookingsFlat
                 .GroupBy(b => b.OwnerId)
-                .Select(g => new
-                {
-                    OwnerId         = g.Key,
-                    OwnerName       = g.First().OwnerName,
-                    OwnerEmail      = g.First().OwnerEmail,
-                    OwnerAvatar     = g.First().OwnerAvatar,
-                    TotalCars       = g.Select(b => b.CarId).Distinct().Count(),
-                    TotalBookings   = g.Count(),
-                    CompletedCount  = g.Count(b => b.Status == "Completed" || b.Status == "Approved"),
-                    CancelledCount  = g.Count(b => b.Status == "Cancelled"),
-                    TotalRevenue    = g.Sum(b => b.SubtotalFee),
-                    TotalCommission = g.Sum(b => b.PlatformCommission),
-                    TotalPayout     = g.Sum(b => b.OwnerPayout),
-                    AvgRevenue      = g.Count() > 0 ? g.Sum(b => b.SubtotalFee) / g.Count() : 0
+                .Select(g => {
+                    var validList = g.Where(b => (b.Status == "Completed" || b.Status == "Approved") && b.IsPaid).ToList();
+                    return new
+                    {
+                        OwnerId         = g.Key,
+                        OwnerName       = g.First().OwnerName,
+                        OwnerEmail      = g.First().OwnerEmail,
+                        OwnerAvatar     = g.First().OwnerAvatar,
+                        TotalCars       = g.Select(b => b.CarId).Distinct().Count(),
+                        TotalBookings   = g.Count(),
+                        CompletedCount  = g.Count(b => b.Status == "Completed" || b.Status == "Approved"),
+                        CancelledCount  = g.Count(b => b.Status == "Cancelled"),
+                        TotalRevenue    = validList.Sum(b => b.SubtotalFee),
+                        TotalCommission = validList.Sum(b => b.PlatformCommission),
+                        TotalPayout     = validList.Sum(b => b.OwnerPayout),
+                        AvgRevenue      = validList.Count > 0 ? validList.Sum(b => b.SubtotalFee) / validList.Count : 0
+                    };
                 })
                 .OrderByDescending(o => o.TotalRevenue)
                 .ToList();
 
-            // Monthly trend per owner (for chart)
+            // Monthly trend per owner (for chart) - only completed/approved & paid
             var monthlyTrend = bookingsFlat
+                .Where(b => (b.Status == "Completed" || b.Status == "Approved") && b.IsPaid)
                 .GroupBy(b => new { b.OwnerId, b.CreatedAt.Year, b.CreatedAt.Month })
                 .Select(g => new
                 {
@@ -746,6 +897,18 @@ namespace CarRetalWebsite.Controllers
         [HttpGet]
         public async Task<IActionResult> ExportRevenueCsv(DateTime? startDate, DateTime? endDate)
         {
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                if (startDate.Value > endDate.Value)
+                {
+                    return BadRequest("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
+                }
+                else if ((endDate.Value - startDate.Value).TotalDays > 366)
+                {
+                    return BadRequest("Khoảng thời gian báo cáo không được vượt quá 1 năm.");
+                }
+            }
+
             var end = endDate ?? DateTime.Today.AddDays(1).AddSeconds(-1);
             var start = startDate ?? DateTime.Today.AddDays(-30);
 

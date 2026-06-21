@@ -151,12 +151,7 @@
         transition: all 0.2s ease;
         padding: 6px 12px;
         text-decoration: none;
-    }
-
-    .page-link-custom:hover, .page-link-custom.active {
-        background-color: #0284c7;
-        color: #ffffff;
-        border-color: #0284c7;
+        display: none; /* deprecated - use standard button pagination */
     }
 
     .chart-container-canvas {
@@ -199,7 +194,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <div>
         <h1 class="h3 fw-bold text-dark mb-1">Báo cáo hiệu suất Doanh thu</h1>
-        <p class="text-muted mb-0">Theo dõi doanh số, hoa hồng hệ thống, chi trả chủ xe và hiệu suất từng Owner.</p>
+        <p class="text-muted mb-0">Theo dõi doanh số, hoa hồng hệ thống.</p>
     </div>
     <a href="#" id="btnExportCsv" class="btn btn-success d-flex align-items-center gap-2 fw-semibold px-4 py-2" style="border-radius: 12px;">
         <i class="fa-solid fa-file-excel"></i> Xuất CSV
@@ -234,82 +229,69 @@
     </div>
 </div>
 
-<!-- KPI Cards – Row 1 -->
-<div class="row g-4 mb-3">
-    <div class="col-md-6 col-lg-3">
-        <div class="report-card kpi-card kpi-blue d-flex justify-content-between align-items-center">
-            <div>
-                <p class="kpi-lbl">Lượt đặt xe</p>
-                <h3 class="kpi-val" id="valBookings">@ViewBag.TotalBookings</h3>
-            </div>
-            <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="report-card kpi-card kpi-green d-flex justify-content-between align-items-center">
-            <div>
-                <p class="kpi-lbl">Tổng doanh thu</p>
-                <h3 class="kpi-val" id="valRevenue">@ViewBag.TotalRevenue.ToString("#,##0") đ</h3>
-            </div>
-            <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="report-card kpi-card kpi-orange d-flex justify-content-between align-items-center">
-            <div>
-                <p class="kpi-lbl">Hoa hồng hệ thống</p>
-                <h3 class="kpi-val" id="valCommission">@ViewBag.TotalCommission.ToString("#,##0") đ</h3>
-            </div>
-            <div class="kpi-icon"><i class="fa-solid fa-percentage"></i></div>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="report-card kpi-card kpi-purple d-flex justify-content-between align-items-center">
-            <div>
-                <p class="kpi-lbl">Chi trả chủ xe</p>
-                <h3 class="kpi-val" id="valPayout">@ViewBag.TotalPayout.ToString("#,##0") đ</h3>
-            </div>
-            <div class="kpi-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-        </div>
-    </div>
-</div>
-
-<!-- KPI Cards – Row 2 -->
+<!-- KPI Cards – Consolidated to 4 cards -->
 <div class="row g-4 mb-4">
+    <!-- Card 1: Lượt đặt xe -->
     <div class="col-md-6 col-lg-3">
-        <div class="report-card kpi-card kpi-teal d-flex justify-content-between align-items-center">
-            <div>
-                <p class="kpi-lbl">Doanh thu TB / đơn</p>
-                <h3 class="kpi-val" id="valAvgRevenue">@ViewBag.AvgRevenue.ToString("#,##0") đ</h3>
+        <div class="report-card kpi-card kpi-blue d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-start w-100">
+                <div>
+                    <p class="kpi-lbl">Lượt đặt xe</p>
+                    <h3 class="kpi-val" id="valBookings">@ViewBag.TotalBookings</h3>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
             </div>
-            <div class="kpi-icon"><i class="fa-solid fa-chart-simple"></i></div>
+            <div class="mt-3 pt-2 border-top border-white border-opacity-10 text-white text-opacity-75" style="font-size: 0.85rem; font-weight: 550;">
+                Hoàn thành: <span id="valCompletedCount">0</span> | Hủy: <span id="valCancelRate">@ViewBag.CancellationRate %</span>
+            </div>
         </div>
     </div>
+    
+    <!-- Card 2: Tổng doanh thu -->
     <div class="col-md-6 col-lg-3">
-        <div class="report-card kpi-card kpi-rose d-flex justify-content-between align-items-center">
-            <div>
-                <p class="kpi-lbl">Tỷ lệ hủy đơn</p>
-                <h3 class="kpi-val" id="valCancelRate">@ViewBag.CancellationRate %</h3>
+        <div class="report-card kpi-card kpi-green d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-start w-100">
+                <div>
+                    <p class="kpi-lbl">Tổng doanh thu</p>
+                    <h3 class="kpi-val" id="valRevenue">@ViewBag.TotalRevenue.ToString("#,##0") đ</h3>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
             </div>
-            <div class="kpi-icon"><i class="fa-solid fa-ban"></i></div>
+            <div class="mt-3 pt-2 border-top border-white border-opacity-10 text-white text-opacity-75" style="font-size: 0.85rem; font-weight: 550;">
+                Trung bình: <span id="valAvgRevenue">@ViewBag.AvgRevenue.ToString("#,##0") đ</span> / đơn
+            </div>
         </div>
     </div>
+    
+    <!-- Card 3: Hoa hồng hệ thống -->
     <div class="col-md-6 col-lg-3">
-        <div class="report-card d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg,#f1f5f9,#e2e8f0);">
-            <div>
-                <p class="kpi-lbl text-secondary">Số Owner có đơn</p>
-                <h3 class="kpi-val text-dark" id="valOwnerCount">0</h3>
+        <div class="report-card kpi-card kpi-orange d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-start w-100">
+                <div>
+                    <p class="kpi-lbl">Hoa hồng hệ thống</p>
+                    <h3 class="kpi-val" id="valCommission">@ViewBag.TotalCommission.ToString("#,##0") đ</h3>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-percentage"></i></div>
             </div>
-            <div style="font-size:1.5rem; opacity:0.5;"><i class="fa-solid fa-users text-primary"></i></div>
+            <div class="mt-3 pt-2 border-top border-white border-opacity-10 text-white text-opacity-75" style="font-size: 0.85rem; font-weight: 550;">
+                Tỷ lệ chiết khấu: <span>10% doanh thu</span>
+            </div>
         </div>
     </div>
+    
+    <!-- Card 4: Chi trả chủ xe -->
     <div class="col-md-6 col-lg-3">
-        <div class="report-card d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg,#f1f5f9,#e2e8f0);">
-            <div>
-                <p class="kpi-lbl text-secondary">Đơn hoàn thành</p>
-                <h3 class="kpi-val text-dark" id="valCompletedCount">0</h3>
+        <div class="report-card kpi-card kpi-purple d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-start w-100">
+                <div>
+                    <p class="kpi-lbl">Chi trả chủ xe</p>
+                    <h3 class="kpi-val" id="valPayout">@ViewBag.TotalPayout.ToString("#,##0") đ</h3>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
             </div>
-            <div style="font-size:1.5rem; opacity:0.5;"><i class="fa-solid fa-circle-check text-success"></i></div>
+            <div class="mt-3 pt-2 border-top border-white border-opacity-10 text-white text-opacity-75" style="font-size: 0.85rem; font-weight: 550;">
+                Có <span id="valOwnerCount">0</span> chủ xe phát sinh đơn
+            </div>
         </div>
     </div>
 </div>
@@ -346,7 +328,7 @@
     </div>
     <div class="col-lg-6">
         <div class="report-card h-100">
-            <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-crown text-warning me-2"></i>Top 5 Owner doanh thu cao nhất</h4>
+            <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-crown text-warning me-2"></i>Top 5 chủ xe doanh thu cao nhất</h4>
             <div class="chart-container-sm">
                 <canvas id="topOwnersChart"></canvas>
             </div>
@@ -379,6 +361,7 @@
         <table class="table table-hover table-custom align-middle" id="revenueTable">
             <thead>
                 <tr>
+                    <th style="width:50px;">#</th>
                     <th>Mã Đơn</th>
                     <th>Khách Hàng</th>
                     <th>Tên Xe</th>
@@ -395,9 +378,19 @@
         </table>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-3">
-        <div class="text-muted" style="font-size: 0.9rem;" id="tableSummary">Hiển thị 0 - 0 trên 0 bản ghi</div>
-        <div class="d-flex gap-1" id="paginationControls"></div>
+    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <label class="text-muted mb-0" style="font-size:0.88rem; white-space:nowrap;">Hiển thị</label>
+            <select id="revPageSize" class="form-select form-select-sm" style="width:70px; border-radius:8px; font-weight:600;">
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="50">50</option>
+            </select>
+            <span class="text-muted" id="tableSummary" style="font-size:0.88rem;"></span>
+        </div>
+        <div class="d-flex gap-1 flex-wrap" id="paginationControls"></div>
     </div>
 </div>
 
@@ -426,7 +419,7 @@
         let allBookings      = [];
         let filteredBookings = [];
         let currentPage      = 1;
-        const pageSize       = 8;
+        let pageSize         = 5;
 
         // ── Chart instances ───────────────────────────────────────────────
         let trendChartInstance    = null;
@@ -441,14 +434,17 @@
             renderStatusChart(rawStatusData);
             renderTopCarsChart(rawTopCars);
             renderTopOwnersChart(rawOwnerStats);
-            renderOwnerTable(rawOwnerStats);
             submitFilter(false);
 
             document.getElementById('startDate').addEventListener('change',  () => { submitFilter(true); resetPresetActive(); });
             document.getElementById('endDate').addEventListener('change',    () => { submitFilter(true); resetPresetActive(); });
             document.getElementById('tableSearch').addEventListener('input', filterAndPaginateTable);
             document.getElementById('statusFilter').addEventListener('change', filterAndPaginateTable);
-            document.getElementById('ownerSearch').addEventListener('input', filterOwnerTable);
+            document.getElementById('revPageSize').addEventListener('change', function() {
+                pageSize = parseInt(this.value);
+                currentPage = 1;
+                paginateTable();
+            });
         });
 
         // ── AJAX Filter ───────────────────────────────────────────────────
@@ -503,7 +499,6 @@
                 renderStatusChart(data.statusData);
                 renderTopCarsChart(data.topCarsData);
                 renderTopOwnersChart(data.ownerStatsData);
-                renderOwnerTable(data.ownerStatsData);
 
                 allBookings      = data.bookings;
                 filteredBookings = [...allBookings];
@@ -529,7 +524,9 @@
         }
 
         function filterOwnerTable() {
-            const q = document.getElementById('ownerSearch').value.toLowerCase().trim();
+            const searchEl = document.getElementById('ownerSearch');
+            if (!searchEl) return;
+            const q = searchEl.value.toLowerCase().trim();
             const filtered = q
                 ? allOwnerStats.filter(o =>
                     (o.ownerName || o.OwnerName || '').toLowerCase().includes(q) ||
@@ -831,52 +828,68 @@
             const tbody       = document.getElementById('tableBody');
             tbody.innerHTML   = '';
 
-            if (displayList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">
-                    <i class="fa-solid fa-receipt fs-2 mb-3 d-block text-secondary"></i>
-                    Không có bản ghi giao dịch nào.</td></tr>`;
-            } else {
-                displayList.forEach(b => {
-                    const sc = b.status.toLowerCase();
-                    tbody.innerHTML += `
-                        <tr>
-                            <td class="fw-bold text-dark">#${b.bookingId}</td>
-                            <td>${b.customerName}</td>
-                            <td class="fw-bold">${b.carName}</td>
-                            <td><span class="badge bg-light text-dark border">${b.licensePlate}</span></td>
-                            <td class="text-muted" style="font-size:0.85rem;">${b.ownerName}</td>
-                            <td style="font-size: 0.85rem;">
-                                <div><i class="fa-regular fa-calendar-check text-success me-1"></i>${b.startDate}</div>
-                                <div><i class="fa-regular fa-calendar-xmark text-danger me-1"></i>${b.endDate}</div>
-                                <div class="text-muted fw-semibold mt-1">(${b.totalDays} ngày)</div>
-                            </td>
-                            <td class="text-end fw-bold text-dark">${b.subtotalFee.toLocaleString('vi-VN')} đ</td>
-                            <td class="text-end fw-bold" style="color:#ea580c;">${b.platformCommission.toLocaleString('vi-VN')} đ</td>
-                            <td class="text-end fw-bold text-success">${b.ownerPayout.toLocaleString('vi-VN')} đ</td>
-                            <td><span class="status-badge status-${sc}">${translateStatus(b.status)}</span></td>
-                        </tr>`;
-                });
-            }
-
             const summaryObj = document.getElementById('tableSummary');
-            summaryObj.textContent = totalItems === 0
-                ? 'Hiển thị 0 - 0 trên 0 bản ghi'
-                : `Hiển thị ${startIdx + 1} - ${endIdx} trên ${totalItems} bản ghi`;
-
             const paginationControls  = document.getElementById('paginationControls');
-            paginationControls.innerHTML = '';
-            if (totalPages > 1) {
-                paginationControls.innerHTML += `<a href="javascript:void(0)" class="page-link-custom ${currentPage === 1 ? 'disabled opacity-50' : ''}"
-                    onclick="${currentPage > 1 ? `changePage(${currentPage - 1})` : ''}">&laquo;</a>`;
-                for (let i = 1; i <= totalPages; i++) {
-                    paginationControls.innerHTML += `<a href="javascript:void(0)" class="page-link-custom ${currentPage === i ? 'active' : ''}"
-                        onclick="changePage(${i})">${i}</a>`;
-                }
-                paginationControls.innerHTML += `<a href="javascript:void(0)" class="page-link-custom ${currentPage === totalPages ? 'disabled opacity-50' : ''}"
-                    onclick="${currentPage < totalPages ? `changePage(${currentPage + 1})` : ''}">&raquo;</a>`;
+
+            if (totalItems === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4 text-muted">
+                    Không có dữ liệu.</td></tr>`;
+                summaryObj.textContent = '';
+                paginationControls.innerHTML = '';
+                return;
             }
+
+            displayList.forEach((b, idx) => {
+                const sc = b.status.toLowerCase();
+                const rowNum = startIdx + idx + 1;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold text-muted">${rowNum}</td>
+                        <td class="fw-bold text-dark">#${b.bookingId}</td>
+                        <td>${b.customerName}</td>
+                        <td class="fw-bold">${b.carName}</td>
+                        <td><span class="badge bg-light text-dark border">${b.licensePlate}</span></td>
+                        <td class="text-muted" style="font-size:0.85rem;">${b.ownerName}</td>
+                        <td style="font-size: 0.85rem;">
+                            <div><i class="fa-regular fa-calendar-check text-success me-1"></i>${b.startDate}</div>
+                            <div><i class="fa-regular fa-calendar-xmark text-danger me-1"></i>${b.endDate}</div>
+                            <div class="text-muted fw-semibold mt-1">(${b.totalDays} ngày)</div>
+                        </td>
+                        <td class="text-end fw-bold text-dark">${b.subtotalFee.toLocaleString('vi-VN')} đ</td>
+                        <td class="text-end fw-bold" style="color:#ea580c;">${b.platformCommission.toLocaleString('vi-VN')} đ</td>
+                        <td class="text-end fw-bold text-success">${b.ownerPayout.toLocaleString('vi-VN')} đ</td>
+                        <td><span class="status-badge status-${sc}">${translateStatus(b.status)}</span></td>
+                    </tr>`;
+            });
+
+            summaryObj.textContent = `trên ${totalItems} bản ghi`;
+            paginationControls.innerHTML = '';
+
+            const mkBtn = (label, page, disabled, active) => {
+                const b = document.createElement('button');
+                b.innerHTML = label;
+                b.className = `btn btn-sm fw-semibold px-3 ${active ? 'btn-primary' : 'btn-light border'}`;
+                b.style.cssText = 'border-radius:8px; min-width:36px;';
+                b.disabled = disabled;
+                b.onclick = () => { currentPage = page; paginateTable(); };
+                paginationControls.appendChild(b);
+            };
+            mkBtn('‹', currentPage - 1, currentPage === 1, false);
+            for (let i = 1; i <= totalPages; i++) mkBtn(i, i, false, i === currentPage);
+            mkBtn('›', currentPage + 1, currentPage === totalPages, false);
         }
 
         function changePage(page) { currentPage = page; paginateTable(); }
+
+        @if (TempData["RevenueError"] != null)
+        {
+            <text>
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi bộ lọc',
+                text: '@Html.Raw(TempData["RevenueError"])'
+            });
+            </text>
+        }
     </script>
 }

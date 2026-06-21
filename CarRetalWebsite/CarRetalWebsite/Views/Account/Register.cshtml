@@ -40,15 +40,30 @@
             display: flex;
         }
 
+        @@keyframes slowZoom {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
         /* Left Side: Image Sidebar */
         .register-sidebar {
             flex: 1.2;
+            display: none;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .register-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
             background: linear-gradient(rgba(2, 132, 199, 0.2), rgba(15, 23, 42, 0.75)), 
                         url('https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80') no-repeat center center;
             background-size: cover;
-            display: none;
-            position: relative;
-            animation: fadeIn 1s ease-out;
+            animation: slowZoom 24s infinite ease-in-out;
+            z-index: 1;
         }
 
         @@media (min-width: 992px) {
@@ -130,12 +145,19 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 20px;
-            transition: transform 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .brand-logo i {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .brand-logo:hover {
-            transform: scale(1.03);
             color: var(--primary-hover);
+        }
+
+        .brand-logo:hover i {
+            transform: scale(1.15) rotate(-5deg);
         }
 
         .form-title {
@@ -174,7 +196,7 @@
             border-radius: 12px;
             border: 1.5px solid #e2e8f0;
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             background-color: #ffffff;
             font-size: 0.95rem;
             color: var(--text-dark);
@@ -198,7 +220,7 @@
             padding: 14px;
             border-radius: 12px;
             width: 100%;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             font-size: 1rem;
             box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2);
             cursor: pointer;
@@ -208,7 +230,7 @@
         .btn-register:hover {
             background-color: var(--primary-hover);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.3);
+            box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35);
         }
 
         .text-link {

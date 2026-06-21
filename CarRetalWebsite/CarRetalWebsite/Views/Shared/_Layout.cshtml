@@ -22,6 +22,9 @@
     <!-- Common Shared CSS -->
     <link href="~/css/common.css" rel="stylesheet" />
     
+    <!-- Animate On Scroll (AOS) CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
     <style>
         body {
             min-height: 100vh;
@@ -168,15 +171,19 @@
                 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <!-- Nav links -->
+                    @{
+                        var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+                        var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+                    }
                     <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link nav-link-custom active" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                            <a class="nav-link nav-link-custom @(string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase) ? "active" : "")" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link nav-link-custom" href="/Car">Khám phá xe</a>
+                            <a class="nav-link nav-link-custom @(string.Equals(currentController, "Car", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/Car">Khám phá xe</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link nav-link-custom" href="/Home/About">Về chúng tôi</a>
+                            <a class="nav-link nav-link-custom @(string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "About", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/Home/About">Về chúng tôi</a>
                         </li>
                     </ul>
                     
@@ -245,6 +252,34 @@
     
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Animate On Scroll (AOS) JS & Custom UI Behaviors -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize AOS
+            AOS.init({
+                duration: 800,
+                once: true,
+                easing: 'ease-out-cubic'
+            });
+
+            // Navbar scroll morphing effect
+            const navbar = document.querySelector('.navbar-custom');
+            if (navbar) {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('navbar-scrolled');
+                }
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY > 50) {
+                        navbar.classList.add('navbar-scrolled');
+                    } else {
+                        navbar.classList.remove('navbar-scrolled');
+                    }
+                });
+            }
+        });
+    </script>
 
     <!-- Global Toast Alert Script -->
     <script>

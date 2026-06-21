@@ -5,23 +5,70 @@
     --text-dark: #1e293b;
     --text-muted: #64748b;
     --bg-light: #f8fafc;
+    
+    /* Premium additions */
+    --accent-color: #f59e0b; /* Amber Accent */
+    --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.03);
+    --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.05);
+    --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.08);
+    --shadow-primary: 0 12px 24px rgba(2, 132, 199, 0.15);
+    --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Selection style */
+::selection {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
 }
 
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     background-color: var(--bg-light);
     color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
 }
 
-/* Custom Buttons */
+/* Glassmorphic Navbar Scroll state */
+.navbar-custom {
+    transition: var(--transition-smooth) !important;
+}
+
+.navbar-custom.navbar-scrolled {
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    box-shadow: var(--shadow-md) !important;
+    padding: 10px 0 !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+}
+
+/* Custom Buttons with smooth micro-interactions */
 .btn-outline-custom {
     color: var(--primary-color) !important;
     border: 2px solid var(--primary-color) !important;
     background-color: transparent;
     font-weight: 600;
     padding: 8px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    border-radius: 10px;
+    transition: var(--transition-smooth);
     text-decoration: none;
     display: inline-block;
 }
@@ -30,7 +77,7 @@ body {
     background-color: var(--primary-color) !important;
     color: #ffffff !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+    box-shadow: var(--shadow-primary);
 }
 
 .btn-primary-custom {
@@ -38,17 +85,18 @@ body {
     color: #ffffff !important;
     font-weight: 600;
     padding: 8px 24px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    border-radius: 10px;
+    transition: var(--transition-smooth);
     text-decoration: none;
     border: none;
     display: inline-block;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2);
 }
 
 .btn-primary-custom:hover {
     background-color: var(--primary-hover) !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    box-shadow: var(--shadow-primary);
 }
 
 /* Car Card Styling (Global) */
@@ -57,8 +105,8 @@ body {
     border-radius: 20px;
     overflow: hidden;
     background-color: #ffffff;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-smooth);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -66,8 +114,8 @@ body {
 }
 
 .car-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(2, 132, 199, 0.15);
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
 }
 
 .car-card-img-wrapper {
@@ -81,25 +129,27 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .car-card:hover .car-card-img {
-    transform: scale(1.08);
+    transform: scale(1.06);
 }
 
 .car-badge {
     position: absolute;
     top: 15px;
     right: 15px;
-    background-color: rgba(2, 132, 199, 0.9);
+    background-color: rgba(2, 132, 199, 0.95);
     color: #ffffff;
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     padding: 6px 14px;
     border-radius: 50px;
     backdrop-filter: blur(8px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    z-index: 2;
 }
 
 .car-card-body {
@@ -144,7 +194,7 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: all 0.3s ease;
+    transition: var(--transition-smooth);
 }
 
 .car-card:hover .spec-badge {
@@ -172,4 +222,40 @@ body {
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-muted);
+}
+
+/* Glowing Custom Form Inputs */
+.form-control-custom {
+    width: 100%;
+    padding: 14px 18px 14px 50px;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    background-color: #ffffff;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+}
+
+.form-control-custom:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px var(--primary-light);
+    outline: none;
+}
+
+/* Custom Dropdown Animation */
+.dropdown-menu-custom {
+    display: block !important;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(15px);
+    pointer-events: none;
+    transition: var(--transition-smooth) !important;
+}
+
+.dropdown-menu-custom.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
 }

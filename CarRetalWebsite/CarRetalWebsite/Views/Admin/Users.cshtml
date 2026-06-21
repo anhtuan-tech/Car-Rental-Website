@@ -127,33 +127,31 @@
 
 <div class="grid-card">
     <!-- Filters Header -->
-    <form method="GET" action="/Admin/Users" class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div class="d-flex align-items-center gap-3 flex-wrap w-100 w-md-auto">
             <div class="search-icon-wrapper">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" name="search" class="search-box-custom" placeholder="Tên, Email hoặc Số điện thoại..." value="@ViewBag.SearchTerm" />
+                <input type="text" id="userSearch" class="search-box-custom" placeholder="Tên, Email hoặc Số điện thoại..." />
             </div>
             
-            <select name="role" class="form-select filter-select-custom w-auto" onchange="this.form.submit()">
+            <select id="roleFilter" class="form-select filter-select-custom w-auto">
                 <option value="">Tất cả vai trò</option>
-                <option value="Customer" selected="@(ViewBag.SelectedRole == "Customer")">Khách thuê xe</option>
-                <option value="Owner" selected="@(ViewBag.SelectedRole == "Owner")">Chủ xe đối tác</option>
+                <option value="Customer">Khách thuê xe</option>
+                <option value="Owner">Chủ xe đối tác</option>
             </select>
         </div>
         
-        @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm) || !string.IsNullOrWhiteSpace(ViewBag.SelectedRole))
-        {
-            <a href="/Admin/Users" class="btn btn-link text-decoration-none text-secondary">
-                <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
-            </a>
-        }
-    </form>
+        <button id="btnClearFilters" class="btn btn-link text-decoration-none text-secondary d-none">
+            <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+        </button>
+    </div>
 
     <!-- Table Grid -->
     <div class="table-responsive">
         <table class="table table-hover table-custom align-middle" id="userTable">
             <thead>
                 <tr>
+                    <th style="width:50px;">#</th>
                     <th>Họ và tên</th>
                     <th>Email</th>
                     <th>Số điện thoại</th>
@@ -166,9 +164,12 @@
             <tbody>
                 @if (Model != null && Model.Any())
                 {
+                    var userIndex = 0;
                     @foreach (var user in Model)
                     {
+                        userIndex++;
                         <tr id="row-@user.UserId">
+                            <td class="fw-bold text-muted">@userIndex</td>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <img src="@(string.IsNullOrWhiteSpace(user.Profile?.AvatarUrl) ? "/images/default-avatar.svg" : user.Profile.AvatarUrl)" width="38" height="38" class="rounded-circle border" style="width: 38px; height: 38px; object-fit: cover;" />
@@ -221,9 +222,8 @@
                 else
                 {
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
-                            <i class="fa-solid fa-users-slash fs-2 mb-3 d-block text-secondary"></i>
-                            Không tìm thấy tài khoản người dùng nào khớp với bộ lọc.
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            Không có dữ liệu.
                         </td>
                     </tr>
                 }
@@ -239,6 +239,7 @@
                 <option value="5" selected>5</option>
                 <option value="10">10</option>
                 <option value="20">20</option>
+                <option value="30">30</option>
                 <option value="50">50</option>
             </select>
             <span class="text-muted" id="userSummary" style="font-size:0.88rem;"></span>
@@ -255,7 +256,7 @@
         <div class="modal-content" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="fw-bold text-dark"><i class="fa-solid fa-address-card text-primary me-2"></i>Hồ sơ thành viên chi tiết</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" translate="no"></button>
             </div>
             <div class="modal-body px-4 py-4 text-center">
                 <img id="detailAvatar" src="" class="rounded-circle border mb-3" width="90" height="90" style="object-fit: cover; aspect-ratio: 1/1;" />
@@ -302,9 +303,7 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end">
-                <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Đóng</button>
-            </div>
+
         </div>
     </div>
 </div>
@@ -317,7 +316,7 @@
         <div class="modal-content" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="fw-bold text-dark"><i class="fa-solid fa-user-gear text-warning me-2"></i>Thay đổi trạng thái</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" translate="no"></button>
             </div>
             <form id="editUserStatusForm">
                 @Html.AntiForgeryToken()
@@ -334,7 +333,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
                     <button type="submit" class="btn btn-primary rounded-3 px-3 fw-semibold">Cập nhật</button>
                 </div>
             </form>
@@ -344,14 +343,7 @@
 
 @section Scripts {
     <script>
-        // SweetAlert2 Toast Helper
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-        });
+
 
         // 1. Fetch User Details for View Modal
         function openDetails(id) {
@@ -459,7 +451,7 @@
         function confirmDelete(id) {
             Swal.fire({
                 title: 'Bạn chắc chắn muốn xóa?',
-                text: "Tài khoản thành viên và hồ sơ liên quan sẽ bị xóa vĩnh viễn khỏi hệ thống!",
+                text: "Tài khoản thành viên này sẽ được chuyển sang trạng thái đã xóa!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
@@ -509,65 +501,120 @@
             });
         }
 
+        // Search & Pagination integration
+        const userSearchInput = document.getElementById('userSearch');
+        const roleFilterSelect = document.getElementById('roleFilter');
+        const btnClearFilters = document.getElementById('btnClearFilters');
+        const userPageSizeSelect = document.getElementById('userPageSize');
+        
+        let allUserRows = Array.from(document.querySelectorAll('#userTable tbody tr'));
+        // Filter out empty state row if server rendered it
+        allUserRows = allUserRows.filter(r => !r.querySelector('td[colspan]'));
+
+        let filteredUserRows = [...allUserRows];
+        let userCurPage = 1;
+        let userPageSize = 5;
+
+        function filterAndPaginateUsers() {
+            const query = userSearchInput.value.toLowerCase().trim();
+            const selectedRole = roleFilterSelect.value; // 'Customer' or 'Owner' or ''
+            
+            // Show/Hide Clear button
+            if (query || selectedRole) {
+                btnClearFilters.classList.remove('d-none');
+            } else {
+                btnClearFilters.classList.add('d-none');
+            }
+
+            filteredUserRows = allUserRows.filter(row => {
+                const name = row.cells[1]?.textContent.toLowerCase() || '';
+                const email = row.cells[2]?.textContent.toLowerCase() || '';
+                const phone = row.cells[3]?.textContent.toLowerCase() || '';
+                
+                const matchQuery = !query || name.includes(query) || email.includes(query) || phone.includes(query);
+                const matchRole = !selectedRole || 
+                                  (selectedRole === 'Customer' && row.querySelector('.role-customer')) || 
+                                  (selectedRole === 'Owner' && row.querySelector('.role-owner'));
+                                  
+                return matchQuery && matchRole;
+            });
+            userCurPage = 1;
+            renderUserTable();
+        }
+
+        function renderUserTable() {
+            const tbody = document.querySelector('#userTable tbody');
+            tbody.innerHTML = '';
+            
+            if (filteredUserRows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            Không có dữ liệu.
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('userSummary').textContent = '';
+                document.getElementById('userPagination').innerHTML = '';
+                return;
+            }
+
+            const total = filteredUserRows.length;
+            const pages = Math.ceil(total / userPageSize) || 1;
+            userCurPage = Math.min(userCurPage, pages);
+            const s = (userCurPage - 1) * userPageSize;
+            const e = Math.min(s + userPageSize, total);
+
+            for (let i = s; i < e; i++) {
+                tbody.appendChild(filteredUserRows[i]);
+            }
+
+            document.getElementById('userSummary').textContent = `trên ${total} bản ghi`;
+
+            const pg = document.getElementById('userPagination');
+            pg.innerHTML = '';
+            const btn = (label, page, disabled, active) => {
+                const b = document.createElement('button');
+                b.innerHTML = label;
+                b.className = `btn btn-sm fw-semibold px-3 ${active ? 'btn-primary' : 'btn-light border'}`;
+                b.style.cssText = 'border-radius:8px; min-width:36px;';
+                b.disabled = disabled;
+                b.onclick = () => { userCurPage = page; renderUserTable(); };
+                pg.appendChild(b);
+            };
+            btn('‹', userCurPage - 1, userCurPage === 1, false);
+            for (let i = 1; i <= pages; i++) btn(i, i, false, i === userCurPage);
+            btn('›', userCurPage + 1, userCurPage === pages, false);
+        }
+
         // Row Fade Helper
         Element.prototype.fadeOutAndRemove = function () {
             this.style.transition = 'all 0.4s ease';
             this.style.opacity = 0;
             this.style.transform = 'translateY(10px)';
             setTimeout(() => {
+                const id = this.id.replace('row-', '');
+                allUserRows = allUserRows.filter(r => r.id !== `row-${id}`);
                 this.remove();
-                // Check if table is empty
-                const tableBody = document.querySelector('#userTable tbody');
-                if (tableBody.querySelectorAll('tr').length === 0) {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
-                                <i class="fa-solid fa-users-slash fs-2 mb-3 d-block text-secondary"></i>
-                                Danh sách trống.
-                            </td>
-                        </tr>
-                    `;
-                }
+                filterAndPaginateUsers();
             }, 400);
         };
-        // Pagination
-        const userPager = paginate(document.querySelector('#userTable tbody'), 'userSummary', 'userPagination', 5);
-        document.getElementById('userPageSize').addEventListener('change', function() {
-            userPager.setPageSize(parseInt(this.value));
+
+        // Event listeners
+        userSearchInput.addEventListener('input', filterAndPaginateUsers);
+        roleFilterSelect.addEventListener('change', filterAndPaginateUsers);
+        btnClearFilters.addEventListener('click', () => {
+            userSearchInput.value = '';
+            roleFilterSelect.value = '';
+            filterAndPaginateUsers();
+        });
+        userPageSizeSelect.addEventListener('change', function() {
+            userPageSize = parseInt(this.value);
+            userCurPage = 1;
+            renderUserTable();
         });
 
-        function paginate(tbody, summaryId, pgId, initSize) {
-            if (!tbody) return { setPageSize: () => {} };
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            let cur = 1;
-            let pageSize = initSize;
-            function render() {
-                const total = rows.length;
-                const pages = Math.ceil(total / pageSize) || 1;
-                cur = Math.min(cur, pages);
-                const s = (cur - 1) * pageSize;
-                const e = Math.min(s + pageSize, total);
-                rows.forEach((r, i) => r.style.display = (i >= s && i < e) ? '' : 'none');
-                const sum = document.getElementById(summaryId);
-                if (sum) sum.textContent = total ? `trên ${total} bản ghi` : '';
-                const pg = document.getElementById(pgId);
-                if (!pg) return;
-                pg.innerHTML = '';
-                const btn = (label, page, disabled, active) => {
-                    const b = document.createElement('button');
-                    b.innerHTML = label;
-                    b.className = `btn btn-sm fw-semibold px-3 ${active ? 'btn-primary' : 'btn-light border'}`;
-                    b.style.cssText = 'border-radius:8px; min-width:36px;';
-                    b.disabled = disabled;
-                    b.onclick = () => { cur = page; render(); };
-                    pg.appendChild(b);
-                };
-                btn('‹', cur - 1, cur === 1, false);
-                for (let i = 1; i <= pages; i++) btn(i, i, false, i === cur);
-                btn('›', cur + 1, cur === pages, false);
-            }
-            render();
-            return { setPageSize(size) { pageSize = size; cur = 1; render(); } };
-        }
+        // Initial render
+        renderUserTable();
     </script>
 }

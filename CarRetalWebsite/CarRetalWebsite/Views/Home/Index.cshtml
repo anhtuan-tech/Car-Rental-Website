@@ -1,122 +1,98 @@
-﻿@model IEnumerable<CarRetalWebsite.Models.Car>
+@model IEnumerable<CarRetalWebsite.Models.Car>
 @{
     ViewData["Title"] = "Trang chủ";
 }
 
 <style>
-    /* Premium Animations */
-    @@keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @@keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    .animate-fade-in {
-        animation: fadeIn 1s ease-out forwards;
-    }
-
-    .animate-up {
-        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .delay-1 {
-        animation-delay: 0.2s;
-        opacity: 0;
-    }
-
-    .delay-2 {
-        animation-delay: 0.4s;
-        opacity: 0;
+    /* Slow breathing background animation for Hero */
+    @@keyframes slowZoom {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.04); }
+        100% { transform: scale(1); }
     }
 
     /* Hero Section */
     .hero-section {
         position: relative;
-        background: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.4)), 
-                    url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1920&q=80') no-repeat center center;
-        background-size: cover;
-        height: 540px;
+        height: 560px;
         display: flex;
         align-items: center;
         color: #ffffff;
         overflow: hidden;
+        background-color: #0f172a;
+        border-radius: 0 0 40px 40px;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(2, 132, 199, 0.4) 100%), 
+                    url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1920&q=80') no-repeat center center;
+        background-size: cover;
+        z-index: 1;
+        animation: slowZoom 24s infinite ease-in-out;
+    }
+
+    .hero-section .container {
+        position: relative;
+        z-index: 2;
     }
 
     .hero-title {
         font-weight: 800;
         font-size: 3.5rem;
         line-height: 1.25;
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     }
 
     .hero-subtitle {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         font-weight: 300;
         margin-top: 18px;
-        color: rgba(255, 255, 255, 0.9);
-        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        color: rgba(255, 255, 255, 0.95);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         max-width: 650px;
+        line-height: 1.6;
     }
 
     .hero-btn {
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: var(--transition-smooth);
         position: relative;
         overflow: hidden;
         z-index: 1;
-    }
-
-    .hero-btn::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.15);
-        transform: translateX(-100%);
-        transition: transform 0.4s ease;
-        z-index: -1;
-    }
-
-    .hero-btn:hover::after {
-        transform: translateX(0);
+        box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
     }
 
     .hero-btn:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(2, 132, 199, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(2, 132, 199, 0.5);
     }
 
     /* Filter Bar Container */
     .filter-wrapper {
         position: relative;
-        margin-top: -70px;
+        margin-top: -65px;
         z-index: 10;
         padding-bottom: 60px;
     }
 
     .filter-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        padding: 35px;
-        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 24px;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        padding: 30px;
+        transition: var(--transition-smooth);
     }
 
     .filter-card:hover {
-        box-shadow: 0 25px 60px rgba(2, 132, 199, 0.12);
+        box-shadow: 0 30px 60px rgba(2, 132, 199, 0.12);
         transform: translateY(-2px);
     }
 
@@ -127,31 +103,31 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
 
     .filter-input {
-        border-radius: 10px;
+        border-radius: 12px;
         border: 1.5px solid #e2e8f0;
         padding: 12px 16px;
         font-weight: 500;
-        transition: all 0.3s ease;
+        transition: var(--transition-smooth);
         background-color: #ffffff;
+        font-size: 0.95rem;
     }
 
     .filter-input:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 4px var(--primary-light);
         outline: none;
-        background-color: #ffffff;
     }
 
-    /* Cars Grid */
+    /* Section Title */
     .section-title {
-        font-weight: 750;
+        font-weight: 800;
         font-size: 2.25rem;
         position: relative;
-        padding-bottom: 15px;
+        padding-bottom: 16px;
         margin-bottom: 12px;
         display: inline-block;
         color: var(--text-dark);
@@ -163,142 +139,19 @@
         bottom: 0;
         left: 50%;
         transform: translateX(-50%);
-        width: 80px;
+        width: 60px;
         height: 4px;
         background-color: var(--primary-color);
         border-radius: 4px;
     }
 
-    /* Car Card Micro-interactions */
-    .car-card {
-        border: none;
-        border-radius: 20px;
-        overflow: hidden;
-        background-color: #ffffff;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        position: relative;
-    }
-
-    .car-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(2, 132, 199, 0.15);
-    }
-
-    .car-card-img-wrapper {
-        position: relative;
-        overflow: hidden;
-        height: 220px;
-        background-color: #f1f5f9;
-    }
-
-    .car-card-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .car-card:hover .car-card-img {
-        transform: scale(1.08);
-    }
-
-    .car-badge {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background-color: rgba(2, 132, 199, 0.9);
-        color: #ffffff;
-        font-weight: 600;
-        font-size: 0.8rem;
-        padding: 6px 14px;
-        border-radius: 50px;
-        backdrop-filter: blur(8px);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .car-card-body {
-        padding: 24px;
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-    }
-
-    .car-name {
-        font-weight: 700;
-        font-size: 1.35rem;
-        margin-bottom: 6px;
-        color: var(--text-dark);
-        transition: color 0.3s ease;
-    }
-
-    .car-card:hover .car-name {
-        color: var(--primary-color);
-    }
-
-    .car-brand {
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        margin-bottom: 18px;
-    }
-
-    .car-specs {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 22px;
-    }
-
-    .spec-badge {
-        background-color: #f8fafc;
-        border: 1px solid #f1f5f9;
-        color: var(--text-dark);
-        font-size: 0.8rem;
-        font-weight: 500;
-        padding: 8px 14px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.3s ease;
-    }
-
-    .car-card:hover .spec-badge {
-        background-color: var(--primary-light);
-        border-color: transparent;
-        color: var(--primary-color);
-    }
-
-    .car-price-wrapper {
-        border-top: 1.5px solid #f1f5f9;
-        padding-top: 18px;
-        margin-top: auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .car-price {
-        font-weight: 800;
-        font-size: 1.3rem;
-        color: var(--primary-color);
-    }
-
-    .price-unit {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--text-muted);
-    }
-
     .find-btn {
-        transition: all 0.3s ease;
+        transition: var(--transition-smooth);
     }
 
     .find-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+        box-shadow: var(--shadow-primary);
     }
 </style>
 
@@ -307,9 +160,9 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-8">
-                <h1 class="hero-title animate-up">Thuê xe tự lái - Trải nghiệm hành trình tự do</h1>
-                <p class="hero-subtitle animate-up delay-1">Đặt xe trực tuyến dễ dàng, nhanh chóng. Đa dạng mẫu xe từ bình dân đến cao cấp với chi phí tối ưu nhất.</p>
-                <div class="mt-4 animate-up delay-2">
+                <h1 class="hero-title" data-aos="fade-up">Thuê xe tự lái - Trải nghiệm hành trình tự do</h1>
+                <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="150">Đặt xe trực tuyến dễ dàng, nhanh chóng. Đa dạng mẫu xe từ bình dân đến cao cấp với chi phí tối ưu nhất.</p>
+                <div class="mt-4" data-aos="fade-up" data-aos-delay="300">
                     <a href="/Car" class="btn-primary-custom py-3 px-4 fs-6 hero-btn">Khám Phá Ngay <i class="fa-solid fa-arrow-right ms-2"></i></a>
                 </div>
             </div>
@@ -318,7 +171,7 @@
 </section>
 
 <!-- Filter Section (UC-10) -->
-<section class="container filter-wrapper animate-up delay-2">
+<section class="container filter-wrapper" data-aos="fade-up" data-aos-delay="400">
     <div class="filter-card">
         <form action="/Car" method="GET">
             <div class="row g-3 align-items-end">
@@ -356,7 +209,7 @@
 
 <!-- Featured Cars Section (UC-08) -->
 <section class="container mb-5 py-3">
-    <div class="text-center mb-5">
+    <div class="text-center mb-5" data-aos="fade-up">
         <h2 class="section-title">Danh Sách Xe Nổi Bật</h2>
         <p class="text-muted">Lựa chọn những dòng xe hàng đầu dành cho bạn với chất lượng tốt nhất và thủ tục nhanh gọn.</p>
     </div>
@@ -364,11 +217,13 @@
     <div class="row g-4 justify-content-center">
         @if (Model != null && Model.Any())
         {
+            var index = 0;
             @foreach (var car in Model)
             {
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="@(index * 100)">
                     @await Html.PartialAsync("_CarCard", car)
                 </div>
+                index++;
             }
         }
         else
@@ -410,11 +265,13 @@
                 }
             };
 
+            var index = 0;
             @foreach (var car in demoCars)
             {
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="@(index * 100)">
                     @await Html.PartialAsync("_CarCard", car)
                 </div>
+                index++;
             }
         }
     </div>

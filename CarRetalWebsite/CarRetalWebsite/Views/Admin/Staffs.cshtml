@@ -106,24 +106,22 @@
 
 <div class="grid-card">
     <!-- Filters Header -->
-    <form method="GET" action="/Admin/Staffs" class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div class="search-icon-wrapper w-100 w-md-auto">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" name="search" class="search-box-custom" placeholder="Tên, Email hoặc Số điện thoại..." value="@ViewBag.SearchTerm" />
+            <input type="text" id="staffSearch" class="search-box-custom" placeholder="Tên, Email hoặc Số điện thoại..." />
         </div>
-        @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm))
-        {
-            <a href="/Admin/Staffs" class="btn btn-link text-decoration-none text-secondary">
-                <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
-            </a>
-        }
-    </form>
+        <button id="btnClearFilters" class="btn btn-link text-decoration-none text-secondary d-none">
+            <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+        </button>
+    </div>
 
     <!-- Table Grid -->
     <div class="table-responsive">
         <table class="table table-hover table-custom align-middle" id="staffTable">
             <thead>
                 <tr>
+                    <th style="width:50px;">#</th>
                     <th>Họ và tên</th>
                     <th>Email</th>
                     <th>Số điện thoại</th>
@@ -135,9 +133,12 @@
             <tbody>
                 @if (Model != null && Model.Any())
                 {
+                    var staffIndex = 0;
                     @foreach (var staff in Model)
                     {
+                        staffIndex++;
                         <tr id="row-@staff.UserId">
+                            <td class="fw-bold text-muted">@staffIndex</td>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <img src="@(string.IsNullOrWhiteSpace(staff.Profile?.AvatarUrl) ? "/images/default-avatar.svg" : staff.Profile.AvatarUrl)" width="38" height="38" class="rounded-circle border" style="width: 38px; height: 38px; object-fit: cover;" />
@@ -164,7 +165,7 @@
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
                                     <button class="action-btn btn-view-details" onclick="openDetails(@staff.UserId)" title="Xem chi tiết">
-                                        <i class="fa-solid fa-eye"></i>
+                                        <i class="fa-solid fa-id-card"></i>
                                     </button>
                                     <button class="action-btn btn-edit-custom" onclick="openEdit(@staff.UserId)" title="Chỉnh sửa">
                                         <i class="fa-solid fa-pen-to-square"></i>
@@ -180,9 +181,8 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            <i class="fa-solid fa-user-slash fs-2 mb-3 d-block text-secondary"></i>
-                            Không tìm thấy tài khoản nhân viên nào khớp với bộ lọc.
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            Không có dữ liệu.
                         </td>
                     </tr>
                 }
@@ -198,6 +198,7 @@
                 <option value="5" selected>5</option>
                 <option value="10">10</option>
                 <option value="20">20</option>
+                <option value="30">30</option>
                 <option value="50">50</option>
             </select>
             <span class="text-muted" id="staffSummary" style="font-size:0.88rem;"></span>
@@ -214,7 +215,7 @@
         <div class="modal-content" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="fw-bold text-dark"><i class="fa-solid fa-user-plus text-primary me-2"></i>Thêm nhân viên mới</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" translate="no"></button>
             </div>
             <form id="createStaffForm" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
@@ -251,7 +252,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end">
-                    <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
                     <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Tạo tài khoản</button>
                 </div>
             </form>
@@ -267,7 +268,7 @@
         <div class="modal-content" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="fw-bold text-dark"><i class="fa-solid fa-circle-info text-info me-2"></i>Chi tiết tài khoản nhân viên</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" translate="no"></button>
             </div>
             <div class="modal-body px-4 py-4 text-center">
                 <img id="detailAvatar" src="" class="rounded-circle border mb-3" width="90" height="90" style="object-fit: cover; aspect-ratio: 1/1;" />
@@ -295,9 +296,7 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end">
-                <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Đóng</button>
-            </div>
+
         </div>
     </div>
 </div>
@@ -310,7 +309,7 @@
         <div class="modal-content" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="fw-bold text-dark"><i class="fa-solid fa-user-gear text-warning me-2"></i>Chỉnh sửa thông tin nhân viên</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" translate="no"></button>
             </div>
             <form id="editStaffForm" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
@@ -345,7 +344,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end">
-                    <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
                     <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Lưu thay đổi</button>
                 </div>
             </form>
@@ -359,7 +358,7 @@
         <div class="modal-content" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="fw-bold text-dark"><i class="fa-solid fa-crop-simple text-primary me-2"></i>Cắt chỉnh ảnh đại diện</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btnCancelCrop"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" translate="no" id="btnCancelCrop"></button>
             </div>
             <div class="modal-body px-4 py-3">
                 <div class="img-container" style="max-height: 400px; background-color: #f1f5f9; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
@@ -380,14 +379,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
     <script>
-        // SweetAlert2 Toast Helper
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-        });
+
 
         // Dictionary to store cropped image blobs
         const croppedBlobs = {};
@@ -618,7 +610,7 @@
         function confirmDelete(id) {
             Swal.fire({
                 title: 'Bạn chắc chắn muốn xóa?',
-                text: "Tài khoản nhân viên này và hồ sơ sẽ bị xóa vĩnh viễn khỏi hệ thống!",
+                text: "Tài khoản nhân viên này sẽ được chuyển sang trạng thái đã xóa!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
@@ -668,65 +660,111 @@
             });
         }
 
+        // Search & Pagination integration
+        const staffSearchInput = document.getElementById('staffSearch');
+        const btnClearFilters = document.getElementById('btnClearFilters');
+        const staffPageSizeSelect = document.getElementById('staffPageSize');
+        
+        let allStaffRows = Array.from(document.querySelectorAll('#staffTable tbody tr'));
+        // Filter out empty state row if server rendered it
+        allStaffRows = allStaffRows.filter(r => !r.querySelector('td[colspan]'));
+
+        let filteredStaffRows = [...allStaffRows];
+        let staffCurPage = 1;
+        let staffPageSize = 5;
+
+        function filterAndPaginateStaff() {
+            const query = staffSearchInput.value.toLowerCase().trim();
+            
+            // Show/Hide Clear button
+            if (query) {
+                btnClearFilters.classList.remove('d-none');
+            } else {
+                btnClearFilters.classList.add('d-none');
+            }
+
+            filteredStaffRows = allStaffRows.filter(row => {
+                const name = row.cells[1]?.textContent.toLowerCase() || '';
+                const email = row.cells[2]?.textContent.toLowerCase() || '';
+                const phone = row.cells[3]?.textContent.toLowerCase() || '';
+                
+                return name.includes(query) || email.includes(query) || phone.includes(query);
+            });
+            staffCurPage = 1;
+            renderStaffTable();
+        }
+
+        function renderStaffTable() {
+            const tbody = document.querySelector('#staffTable tbody');
+            tbody.innerHTML = '';
+            
+            if (filteredStaffRows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            Không có dữ liệu.
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('staffSummary').textContent = '';
+                document.getElementById('staffPagination').innerHTML = '';
+                return;
+            }
+
+            const total = filteredStaffRows.length;
+            const pages = Math.ceil(total / staffPageSize) || 1;
+            staffCurPage = Math.min(staffCurPage, pages);
+            const s = (staffCurPage - 1) * staffPageSize;
+            const e = Math.min(s + staffPageSize, total);
+
+            for (let i = s; i < e; i++) {
+                tbody.appendChild(filteredStaffRows[i]);
+            }
+
+            document.getElementById('staffSummary').textContent = `trên ${total} bản ghi`;
+
+            const pg = document.getElementById('staffPagination');
+            pg.innerHTML = '';
+            const btn = (label, page, disabled, active) => {
+                const b = document.createElement('button');
+                b.innerHTML = label;
+                b.className = `btn btn-sm fw-semibold px-3 ${active ? 'btn-primary' : 'btn-light border'}`;
+                b.style.cssText = 'border-radius:8px; min-width:36px;';
+                b.disabled = disabled;
+                b.onclick = () => { staffCurPage = page; renderStaffTable(); };
+                pg.appendChild(b);
+            };
+            btn('‹', staffCurPage - 1, staffCurPage === 1, false);
+            for (let i = 1; i <= pages; i++) btn(i, i, false, i === staffCurPage);
+            btn('›', staffCurPage + 1, staffCurPage === pages, false);
+        }
+
         // Row Fade Helper
         Element.prototype.fadeOutAndRemove = function () {
             this.style.transition = 'all 0.4s ease';
             this.style.opacity = 0;
             this.style.transform = 'translateY(10px)';
             setTimeout(() => {
+                const id = this.id.replace('row-', '');
+                allStaffRows = allStaffRows.filter(r => r.id !== `row-${id}`);
                 this.remove();
-                // Check if table is empty
-                const tableBody = document.querySelector('#staffTable tbody');
-                if (tableBody.querySelectorAll('tr').length === 0) {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="fa-solid fa-user-slash fs-2 mb-3 d-block text-secondary"></i>
-                                Danh sách trống.
-                            </td>
-                        </tr>
-                    `;
-                }
+                filterAndPaginateStaff();
             }, 400);
         };
-        // Pagination
-        const staffPager = paginate(document.querySelector('#staffTable tbody'), 'staffSummary', 'staffPagination', 5);
-        document.getElementById('staffPageSize').addEventListener('change', function() {
-            staffPager.setPageSize(parseInt(this.value));
+
+        // Event listeners
+        staffSearchInput.addEventListener('input', filterAndPaginateStaff);
+        btnClearFilters.addEventListener('click', () => {
+            staffSearchInput.value = '';
+            filterAndPaginateStaff();
+        });
+        staffPageSizeSelect.addEventListener('change', function() {
+            staffPageSize = parseInt(this.value);
+            staffCurPage = 1;
+            renderStaffTable();
         });
 
-        function paginate(tbody, summaryId, pgId, initSize) {
-            if (!tbody) return { setPageSize: () => {} };
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            let cur = 1;
-            let pageSize = initSize;
-            function render() {
-                const total = rows.length;
-                const pages = Math.ceil(total / pageSize) || 1;
-                cur = Math.min(cur, pages);
-                const s = (cur - 1) * pageSize;
-                const e = Math.min(s + pageSize, total);
-                rows.forEach((r, i) => r.style.display = (i >= s && i < e) ? '' : 'none');
-                const sum = document.getElementById(summaryId);
-                if (sum) sum.textContent = total ? `trên ${total} bản ghi` : '';
-                const pg = document.getElementById(pgId);
-                if (!pg) return;
-                pg.innerHTML = '';
-                const btn = (label, page, disabled, active) => {
-                    const b = document.createElement('button');
-                    b.innerHTML = label;
-                    b.className = `btn btn-sm fw-semibold px-3 ${active ? 'btn-primary' : 'btn-light border'}`;
-                    b.style.cssText = 'border-radius:8px; min-width:36px;';
-                    b.disabled = disabled;
-                    b.onclick = () => { cur = page; render(); };
-                    pg.appendChild(b);
-                };
-                btn('‹', cur - 1, cur === 1, false);
-                for (let i = 1; i <= pages; i++) btn(i, i, false, i === cur);
-                btn('›', cur + 1, cur === pages, false);
-            }
-            render();
-            return { setPageSize(size) { pageSize = size; cur = 1; render(); } };
-        }
+        // Initial render
+        renderStaffTable();
     </script>
 }

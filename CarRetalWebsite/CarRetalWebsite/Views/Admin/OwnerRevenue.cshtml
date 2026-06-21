@@ -66,15 +66,6 @@
     .search-icon-wrapper { position: relative; }
     .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 
-    .rank-badge {
-        width: 30px; height: 30px; border-radius: 50%;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-weight: 800; font-size: 0.82rem;
-    }
-    .rank-1     { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #fff; }
-    .rank-2     { background: linear-gradient(135deg, #94a3b8, #cbd5e1); color: #fff; }
-    .rank-3     { background: linear-gradient(135deg, #b45309, #d97706); color: #fff; }
-    .rank-other { background: #f1f5f9; color: #475569; }
 
     .progress-mini {
         height: 6px; border-radius: 10px; background: #f1f5f9; overflow: hidden;
@@ -234,6 +225,7 @@
                 <option value="5" selected>5</option>
                 <option value="10">10</option>
                 <option value="20">20</option>
+                <option value="30">30</option>
                 <option value="50">50</option>
             </select>
             <span class="text-muted" id="ownerSummary" style="font-size:0.88rem;"></span>
@@ -262,6 +254,11 @@
         document.getElementById('endDate').addEventListener('change',   () => { submitFilter(); resetPresets(); });
         document.getElementById('ownerSearch').addEventListener('input', applyFilters);
         document.getElementById('sortBy').addEventListener('change', applyFilters);
+        document.getElementById('ownerPageSize').addEventListener('change', function() {
+            ownerPageSize = parseInt(this.value);
+            ownerCurPage = 1;
+            renderOwnerTable(filteredOwners);
+        });
     });
 
     function submitFilter() {
@@ -376,9 +373,8 @@
         document.getElementById('ownerCountBadge').textContent = total + ' chủ xe';
 
         if (!total) {
-            tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-muted">
-                <i class="fa-solid fa-users-slash fs-2 mb-3 d-block"></i>
-                Không có dữ liệu chủ xe trong khoảng thời gian này.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4 text-muted">
+                Không có dữ liệu.</td></tr>`;
             renderOwnerPagination(0);
             return;
         }
@@ -413,11 +409,10 @@
             const pay    = o.TotalPayout     || o.totalPayout     || 0;
             const avg    = o.AvgRevenue      || o.avgRevenue      || 0;
             const share  = grandTotalRevenue > 0 ? Math.round(rev / grandTotalRevenue * 100) : 0;
-            const rankCls = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-other';
 
             tbody.innerHTML += `
                 <tr>
-                    <td><span class="rank-badge ${rankCls}">${idx + 1}</span></td>
+                    <td class="fw-bold text-muted">${idx + 1}</td>
                     <td>
                         <div class="d-flex align-items-center gap-3">
                             <img src="${avatar}" class="owner-avatar" onerror="this.src='/images/default-avatar.svg'">
@@ -469,6 +464,7 @@
         if (sum) sum.textContent = total ? `trên ${total} bản ghi` : '';
 
         pg.innerHTML = '';
+        if (total === 0) return;
         const btn = (label, page, disabled, active) => {
             const b = document.createElement('button');
             b.innerHTML = label;
@@ -526,6 +522,17 @@
     function fmt(d) {
         const dd = new Date(d);
         return [dd.getFullYear(), String(dd.getMonth()+1).padStart(2,'0'), String(dd.getDate()).padStart(2,'0')].join('-');
+    }
+
+    @if (TempData["RevenueError"] != null)
+    {
+        <text>
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi bộ lọc',
+            text: '@Html.Raw(TempData["RevenueError"])'
+        });
+        </text>
     }
 </script>
 }

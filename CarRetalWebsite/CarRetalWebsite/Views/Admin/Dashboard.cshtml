@@ -172,6 +172,7 @@
                 <table class="table table-hover table-custom align-middle">
                     <thead>
                         <tr>
+                            <th style="width:50px;">#</th>
                             <th>Họ và tên</th>
                             <th>Email</th>
                             <th>Số điện thoại</th>
@@ -182,9 +183,12 @@
                     <tbody id="dashTbody">
                         @if (Model != null && Model.Any())
                         {
+                            var dashIndex = 0;
                             @foreach (var user in Model)
                             {
+                                dashIndex++;
                                 <tr>
+                                    <td class="fw-bold text-muted">@dashIndex</td>
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
                                             <img src="@(string.IsNullOrWhiteSpace(user.Profile?.AvatarUrl) ? "/images/default-avatar.svg" : user.Profile.AvatarUrl)" width="30" height="30" class="rounded-circle" style="width: 30px; height: 30px; object-fit: cover;" />
@@ -218,7 +222,9 @@
                         else
                         {
                             <tr>
-                                <td colspan="5" class="text-center text-muted">Chưa có tài khoản nào đăng ký gần đây.</td>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    Không có dữ liệu.
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -232,6 +238,7 @@
                         <option value="5" selected>5</option>
                         <option value="10">10</option>
                         <option value="20">20</option>
+                        <option value="30">30</option>
                         <option value="50">50</option>
                     </select>
                     <span class="text-muted" id="dashSummary" style="font-size:0.88rem;"></span>
@@ -277,17 +284,27 @@
         let pageSize = initSize;
 
         function render() {
-            const total = rows.length;
+            const hasData = rows.length > 0 && !rows[0].querySelector('td[colspan]');
+            const total = hasData ? rows.length : 0;
             const pages = Math.ceil(total / pageSize) || 1;
             cur = Math.min(cur, pages);
+
+            const sum = document.getElementById(summaryId);
+            const pg = document.getElementById(pgId);
+
+            if (!hasData) {
+                rows.forEach(r => r.style.display = '');
+                if (sum) sum.textContent = '';
+                if (pg) pg.innerHTML = '';
+                return;
+            }
+
             const s = (cur - 1) * pageSize;
             const e = Math.min(s + pageSize, total);
             rows.forEach((r, i) => r.style.display = (i >= s && i < e) ? '' : 'none');
 
-            const sum = document.getElementById(summaryId);
-            if (sum) sum.textContent = total ? `trên ${total} bản ghi` : '';
+            if (sum) sum.textContent = `trên ${total} bản ghi`;
 
-            const pg = document.getElementById(pgId);
             if (!pg) return;
             pg.innerHTML = '';
             const btn = (label, page, disabled, active) => {

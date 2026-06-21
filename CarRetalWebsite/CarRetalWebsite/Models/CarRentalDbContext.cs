@@ -43,7 +43,8 @@ public partial class CarRentalDbContext : DbContext
                 .AddJsonFile("appsettings.Development.json", true, true)
                 .Build();
         return configuration["ConnectionStrings:DefaultConnectionString"] 
-               ?? configuration["ConnectionStrings:DefaultConnection"];
+               ?? configuration["ConnectionStrings:DefaultConnection"]
+               ?? "";
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
