@@ -12,7 +12,7 @@ CREATE TABLE User (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     phone_number VARCHAR(15) NOT NULL UNIQUE,
-    status VARCHAR(20) NOT NULL DEFAULT 'Active', -- Active, Inactive, Blocked, Pending_Approval
+    status VARCHAR(20) NOT NULL DEFAULT 'Active', -- Active, Deleted, Inactive, Blocked, Pending_Approval
     created_at DATETIME NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME NOT NULL DEFAULT GETDATE(),
     
