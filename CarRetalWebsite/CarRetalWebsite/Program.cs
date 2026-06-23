@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
 using CarRetalWebsite.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarRetalWebsite
@@ -14,7 +14,10 @@ namespace CarRetalWebsite
             builder.Services.AddControllersWithViews();
             builder.Services.AddMemoryCache();
             builder.Services.AddScoped<CarRetalWebsite.Services.EmailService>();
-            builder.Services.AddDbContext<CarRentalDbContext>();
+            // Register DbContext with connection string from appsettings.json
+            builder.Services.AddDbContext<CarRentalDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {

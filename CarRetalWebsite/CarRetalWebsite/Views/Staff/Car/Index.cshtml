@@ -1,0 +1,193 @@
+﻿@using CarRetalWebsite.Models
+@model IEnumerable<CarRetalWebsite.Models.Car>
+
+@{
+    ViewData["Title"] = "Manage Cars";
+}
+
+<style>
+    body {
+        background: #f5f7fb;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 20px;
+    }
+
+    /* FILTER CARD */
+    .filter-card {
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(14px);
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        border: 1px solid rgba(226,232,240,0.7);
+        margin-bottom: 25px;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        padding: 10px 14px;
+        border: 1px solid #e2e8f0;
+        transition: 0.2s ease;
+    }
+
+        .form-control:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2,132,199,0.15);
+        }
+
+    /* BUTTON */
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #0284c7, #0369a1);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 18px;
+        font-weight: 600;
+        transition: 0.2s ease;
+    }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(2,132,199,0.25);
+        }
+
+    /* TABLE CARD */
+    .table-card {
+        background: white;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+        border: 1px solid rgba(226,232,240,0.7);
+    }
+
+    .table thead {
+        background: #0f172a;
+        color: white;
+    }
+
+    .table tbody tr {
+        transition: 0.2s ease;
+    }
+
+        .table tbody tr:hover {
+            background: #f1f5f9;
+            transform: scale(1.002);
+        }
+
+    /* STATUS BADGE */
+    .status {
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .status-available {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .status-rented {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .status-maintenance {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .status-inactive {
+        background: #e2e8f0;
+        color: #475569;
+    }
+</style>
+
+<h2 class="page-title">🚗 Manage Cars</h2>
+
+<!-- FILTER -->
+<div class="filter-card">
+    <form method="get" class="row g-3">
+
+        <div class="col-md-5">
+            <input type="text"
+                   name="search"
+                   value="@ViewBag.Search"
+                   class="form-control"
+                   placeholder="Search car or brand..." />
+        </div>
+
+        <div class="col-md-4">
+            <input type="text"
+                   name="status"
+                   value="@ViewBag.Status"
+                   class="form-control"
+                   placeholder="Status (Available, Rented...)" />
+        </div>
+
+        <div class="col-md-3">
+            <button class="btn-primary-custom w-100">
+                🔍 Search
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<!-- TABLE -->
+<div class="table-card">
+    <table class="table table-hover mb-0">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Car Name</th>
+                <th>Brand</th>
+                <th>License Plate</th>
+                <th>Owner</th>
+                <th>Status</th>
+                <th>Price/Day</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var car in Model)
+            {
+                <tr>
+                    <td>@car.CarId</td>
+                    <td>@car.CarName</td>
+                    <td>@car.Brand</td>
+                    <td>@car.LicensePlate</td>
+
+                    <td>
+                        @(car.Owner?.Profile?.FullName ?? car.Owner?.Email)
+                    </td>
+
+                    <td>
+                        <span class="status status-@car.Status.ToLower()">
+                            @car.Status
+                        </span>
+                    </td>
+
+                    <td>@car.PricePerDay.ToString("N0")</td>
+
+                    <td>
+                        <a asp-action="Details"
+                           asp-route-id="@car.CarId"
+                           class="btn btn-sm btn-outline-primary">
+                            Details
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+</div>

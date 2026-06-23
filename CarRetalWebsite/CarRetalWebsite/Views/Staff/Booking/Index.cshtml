@@ -1,0 +1,84 @@
+﻿@model IEnumerable<CarRetalWebsite.Models.Booking>
+
+@{
+    ViewData["Title"] = "Manage Bookings";
+}
+
+<h2>Manage Bookings</h2>
+
+<form method="get" class="row mb-3">
+    <div class="col-md-4">
+        <input type="text"
+               name="search"
+               value="@ViewBag.Search"
+               class="form-control"
+               placeholder="Search booking..." />
+    </div>
+
+    <div class="col-md-3">
+        <select name="status" class="form-select">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Active">Active</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary">
+            Search
+        </button>
+    </div>
+</form>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Car</th>
+            <th>License Plate</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Total Fee</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.BookingId</td>
+
+                <td>
+                    @(item.Customer?.Profile?.FullName
+                                    ?? item.Customer?.Email)
+            </td>
+
+                <td>@item.Car?.CarName</td>
+
+                <td>@item.Car?.LicensePlate</td>
+
+                <td>@item.StartDate.ToString("dd/MM/yyyy")</td>
+
+                <td>@item.EndDate.ToString("dd/MM/yyyy")</td>
+
+                <td>@item.Status</td>
+
+                <td>@item.SubtotalFee.ToString("N0")</td>
+
+                <td>
+                    <a asp-action="Details"
+                       asp-route-id="@item.BookingId"
+                       class="btn btn-info btn-sm">
+                        Details
+                    </a>
+                </td>
+            </tr>
+                }
+    </tbody>
+</table>

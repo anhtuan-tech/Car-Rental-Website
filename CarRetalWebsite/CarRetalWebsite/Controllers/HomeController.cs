@@ -1,10 +1,6 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+using CarRetalWebsite.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using CarRetalWebsite.Models;
 
 namespace CarRetalWebsite.Controllers
 {
@@ -27,7 +23,7 @@ namespace CarRetalWebsite.Controllers
                 }
                 else if (User.IsInRole("Owner") || User.IsInRole("Staff"))
                 {
-                    return Content("Chức năng cho Chủ xe và Nhân viên đang được phát triển.");
+                    return RedirectToAction("Index", "StaffCar");
                 }
             }
 

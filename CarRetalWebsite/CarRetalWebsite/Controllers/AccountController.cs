@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
+using CarRetalWebsite.Models;
+using CarRetalWebsite.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using CarRetalWebsite.Models;
 using Microsoft.Extensions.Caching.Memory;
-using CarRetalWebsite.Services;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CarRetalWebsite.Controllers
 {
@@ -77,7 +74,7 @@ namespace CarRetalWebsite.Controllers
                 .FirstOrDefaultAsync(u => u.Email == email || u.PhoneNumber == email);
 
             var hashedPassword = HashPasswordSha256(password);
-            if (user == null || user.Password != hashedPassword)
+            if (user == null || user.Password != password)
             {
                 TempData["LoginError"] = "Tài khoản hoặc mật khẩu không chính xác.";
                 return View();
@@ -127,7 +124,7 @@ namespace CarRetalWebsite.Controllers
             }
             else if (user.Role?.RoleName == "Owner" || user.Role?.RoleName == "Staff")
             {
-                return Content("Chức năng cho Chủ xe và Nhân viên đang được phát triển.");
+                return RedirectToAction("Index", "StaffCar");
             }
 
             return RedirectToAction("Index", "Home");
@@ -169,8 +166,8 @@ namespace CarRetalWebsite.Controllers
             string phoneNumber,
             string driverLicenseNo)
         {
-            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email) || 
-                string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(confirmPassword) || 
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(confirmPassword) ||
                 string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(driverLicenseNo))
             {
                 TempData["RegisterError"] = "Vui lòng điền đầy đủ các thông tin bắt buộc.";
@@ -271,9 +268,9 @@ namespace CarRetalWebsite.Controllers
             string idCardNo,
             string address)
         {
-            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email) || 
-                string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(confirmPassword) || 
-                string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(idCardNo) || 
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(confirmPassword) ||
+                string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(idCardNo) ||
                 string.IsNullOrWhiteSpace(address))
             {
                 TempData["RegisterOwnerError"] = "Vui lòng điền đầy đủ các thông tin bắt buộc.";

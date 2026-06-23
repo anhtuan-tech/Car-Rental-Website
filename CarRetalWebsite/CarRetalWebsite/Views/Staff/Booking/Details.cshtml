@@ -1,0 +1,98 @@
+﻿@model CarRetalWebsite.Models.Booking
+
+@{
+    ViewData["Title"] = "Booking Details";
+}
+
+<h2>Booking Details</h2>
+
+<div class="card">
+    <div class="card-body">
+
+        <p>
+            <strong>Booking ID:</strong>
+            @Model.BookingId
+        </p>
+
+        <p>
+            <strong>Customer:</strong>
+            @(Model.Customer?.Profile?.FullName
+                        ?? Model.Customer?.Email)
+        </p>
+
+        <p>
+            <strong>Car:</strong>
+            @Model.Car?.CarName
+        </p>
+
+        <p>
+            <strong>License Plate:</strong>
+            @Model.Car?.LicensePlate
+        </p>
+
+        <p>
+            <strong>Start Date:</strong>
+            @Model.StartDate
+        </p>
+
+        <p>
+            <strong>End Date:</strong>
+            @Model.EndDate
+        </p>
+
+        <p>
+            <strong>Total Days:</strong>
+            @Model.TotalDays
+        </p>
+
+        <p>
+            <strong>Total Fee:</strong>
+            @Model.SubtotalFee.ToString("N0")
+        </p>
+
+        <p>
+            <strong>Status:</strong>
+            @Model.Status
+        </p>
+
+        <hr />
+
+        <form asp-action="UpdateStatus" method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="id"
+                   value="@Model.BookingId" />
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Update Status
+                </label>
+
+                <select name="newStatus"
+                        class="form-select">
+
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Active">Active</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+
+                </select>
+            </div>
+
+            <button type="submit"
+                    class="btn btn-success">
+                Save
+            </button>
+
+            <a asp-action="Index"
+               class="btn btn-secondary">
+                Back
+            </a>
+
+        </form>
+
+    </div>
+</div>

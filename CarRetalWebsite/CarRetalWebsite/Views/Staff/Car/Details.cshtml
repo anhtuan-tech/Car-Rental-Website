@@ -1,0 +1,107 @@
+﻿@model CarRetalWebsite.Models.Car
+
+@{
+    ViewData["Title"] = "Car Details";
+}
+
+<h2>Car Details</h2>
+
+<div class="card">
+    <div class="card-body">
+
+        <p>
+            <strong>Car Name:</strong>
+            @Model.CarName
+        </p>
+
+        <p>
+            <strong>Brand:</strong>
+            @Model.Brand
+        </p>
+
+        <p>
+            <strong>Model:</strong>
+            @Model.Model
+        </p>
+
+        <p>
+            <strong>License Plate:</strong>
+            @Model.LicensePlate
+        </p>
+
+        <p>
+            <strong>Type:</strong>
+            @Model.Type?.TypeName
+        </p>
+
+        <p>
+            <strong>Price Per Day:</strong>
+            @Model.PricePerDay.ToString("N0")
+        </p>
+
+        <p>
+            <strong>Status:</strong>
+            @Model.Status
+        </p>
+
+        <p>
+            <strong>Owner:</strong>
+            @(Model.Owner?.Profile?.FullName
+                        ?? Model.Owner?.Email)
+        </p>
+
+        <hr />
+
+        <form asp-action="UpdateStatus"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="id"
+                   value="@Model.CarId" />
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Update Status
+                </label>
+
+                <select name="newStatus"
+                        class="form-select">
+
+                    <option value="Available">Available</option>
+                    <option value="Rented">Rented</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Inactive">Inactive</option>
+
+                </select>
+            </div>
+
+            <button type="submit"
+                    class="btn btn-success">
+                Save
+            </button>
+
+            <a asp-action="Index"
+               class="btn btn-secondary">
+                Back
+            </a>
+
+        </form>
+
+        <hr />
+
+        @if (Model.CarImages.Any())
+        {
+            <h5>Images</h5>
+
+            @foreach (var img in Model.CarImages)
+            {
+                <img src="@img.ImageUrl"
+                     width="200"
+                     class="m-2 border" />
+            }
+        }
+
+    </div>
+</div>
