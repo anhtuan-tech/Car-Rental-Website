@@ -98,6 +98,7 @@ namespace CarRetalWebsite.Controllers
             // Thiết lập các Claims hệ thống
             var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(ClaimTypes.Name, user.Profile?.FullName ?? "Người dùng"),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "Customer"),
@@ -195,9 +196,15 @@ namespace CarRetalWebsite.Controllers
                 return View();
             }
 
-            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^\d{10,}$"))
+            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^(03|05|07|08|09)\d{8}$"))
             {
-                TempData["RegisterError"] = "Số điện thoại phải chỉ gồm các chữ số và có độ dài từ 10 ký tự trở lên.";
+                TempData["RegisterError"] = "Số điện thoại phải gồm đúng 10 chữ số hợp lệ của nhà mạng Việt Nam (bắt đầu bằng 03, 05, 07, 08, 09).";
+                return View();
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(driverLicenseNo, @"^\d{12}$"))
+            {
+                TempData["RegisterError"] = "Số Giấy phép lái xe (GPLX) phải gồm đúng 12 chữ số.";
                 return View();
             }
 
@@ -212,6 +219,13 @@ namespace CarRetalWebsite.Controllers
             if (duplicatePhone)
             {
                 TempData["RegisterError"] = "Số điện thoại đã được đăng ký.";
+                return View();
+            }
+
+            var duplicateLicense = await _context.Profiles.AnyAsync(p => p.DriverLicenseNo == driverLicenseNo);
+            if (duplicateLicense)
+            {
+                TempData["RegisterError"] = "Số Giấy phép lái xe (GPLX) này đã được sử dụng.";
                 return View();
             }
 
@@ -298,9 +312,15 @@ namespace CarRetalWebsite.Controllers
                 return View();
             }
 
-            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^\d{10,}$"))
+            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^(03|05|07|08|09)\d{8}$"))
             {
-                TempData["RegisterOwnerError"] = "Số điện thoại phải chỉ gồm các chữ số và có độ dài từ 10 ký tự trở lên.";
+                TempData["RegisterOwnerError"] = "Số điện thoại phải gồm đúng 10 chữ số hợp lệ của nhà mạng Việt Nam (bắt đầu bằng 03, 05, 07, 08, 09).";
+                return View();
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(idCardNo, @"^(\d{9}|\d{12})$"))
+            {
+                TempData["RegisterOwnerError"] = "Số CCCD / CMND phải gồm đúng 9 hoặc 12 chữ số.";
                 return View();
             }
 
@@ -315,6 +335,13 @@ namespace CarRetalWebsite.Controllers
             if (duplicatePhone)
             {
                 TempData["RegisterOwnerError"] = "Số điện thoại đã được đăng ký.";
+                return View();
+            }
+
+            var duplicateIdCard = await _context.Profiles.AnyAsync(p => p.IdCardNo == idCardNo);
+            if (duplicateIdCard)
+            {
+                TempData["RegisterOwnerError"] = "Số CCCD / CMND này đã được sử dụng.";
                 return View();
             }
 

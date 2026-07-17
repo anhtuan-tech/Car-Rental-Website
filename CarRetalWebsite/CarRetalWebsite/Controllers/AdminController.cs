@@ -157,9 +157,9 @@ namespace CarRetalWebsite.Controllers
                 return Json(new { success = false, message = "Mật khẩu xác nhận không khớp." });
             }
 
-            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^\d{10,}$"))
+            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^(03|05|07|08|09)\d{8}$"))
             {
-                return Json(new { success = false, message = "Số điện thoại phải chỉ gồm các chữ số và có độ dài từ 10 ký tự trở lên." });
+                return Json(new { success = false, message = "Số điện thoại phải gồm đúng 10 chữ số hợp lệ của nhà mạng Việt Nam (bắt đầu bằng 03, 05, 07, 08, 09)." });
             }
 
             var duplicateEmail = await _context.Users.AnyAsync(u => u.Email == email);
@@ -260,9 +260,9 @@ namespace CarRetalWebsite.Controllers
                 return Json(new { success = false, message = "Vui lòng điền đầy đủ các thông tin." });
             }
 
-            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^\d{10,}$"))
+            if (!System.Text.RegularExpressions.Regex.IsMatch(phoneNumber, @"^(03|05|07|08|09)\d{8}$"))
             {
-                return Json(new { success = false, message = "Số điện thoại phải chỉ gồm các chữ số và có độ dài từ 10 ký tự trở lên." });
+                return Json(new { success = false, message = "Số điện thoại phải gồm đúng 10 chữ số hợp lệ của nhà mạng Việt Nam (bắt đầu bằng 03, 05, 07, 08, 09)." });
             }
 
             if (status != "Active" && status != "Inactive" && status != "Banned" && status != "Deleted")
