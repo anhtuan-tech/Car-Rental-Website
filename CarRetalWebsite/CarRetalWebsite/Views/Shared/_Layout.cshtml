@@ -217,10 +217,15 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item dropdown-item-custom" href="/MyBookings">
-                                            <i class="fa-solid fa-receipt text-primary-custom"></i> Chuyến đi của tôi
-                                        </a>
-                                    </li>
+                                         <a class="dropdown-item dropdown-item-custom" href="/Booking">
+                                             <i class="fa-solid fa-receipt text-primary-custom"></i> Chuyến đi của tôi
+                                         </a>
+                                     </li>
+                                     <li>
+                                         <a class="dropdown-item dropdown-item-custom" asp-controller="Feedback" asp-action="MyFeedbacks">
+                                             <i class="fa-regular fa-comment-dots text-primary-custom"></i> Lịch sử feedback
+                                         </a>
+                                     </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item dropdown-item-custom text-danger" asp-controller="Account" asp-action="Logout">

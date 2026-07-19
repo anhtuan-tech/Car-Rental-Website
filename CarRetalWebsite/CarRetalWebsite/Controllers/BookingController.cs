@@ -17,40 +17,8 @@ namespace CarRetalWebsite.Controllers
             _context = context;
         }
 
-        // Hiển thị danh sách xe có sẵn (Available) để khách hàng chọn đặt
-        public async Task<IActionResult> Index(string keyword, int? typeId, decimal? maxPrice)
-        {
-            var query = _context.Cars
-                .Include(c => c.CarImages)
-                .Include(c => c.Type)
-                .Where(c => c.Status == "Available");
-
-            if (!string.IsNullOrEmpty(keyword))
-            {
-                query = query.Where(c => c.CarName.Contains(keyword) || c.Brand.Contains(keyword));
-            }
-
-            if (typeId.HasValue)
-            {
-                query = query.Where(c => c.TypeId == typeId.Value);
-            }
-
-            if (maxPrice.HasValue)
-            {
-                query = query.Where(c => c.PricePerDay <= maxPrice.Value);
-            }
-
-            var cars = await query.ToListAsync();
-            ViewBag.CarTypes = await _context.CarTypes.ToListAsync();
-            ViewBag.Keyword = keyword;
-            ViewBag.TypeId = typeId;
-            ViewBag.MaxPrice = maxPrice;
-
-            return View(cars);
-        }
-
-        // Xem danh sách đặt xe của Vũ Minh Khang
-        public async Task<IActionResult> MyBookings(string keyword, DateTime? startDate, DateTime? endDate, string status)
+        // Xem danh sách đặt xe của khách hàng Vũ Minh Khang
+        public async Task<IActionResult> Index(string keyword, DateTime? startDate, DateTime? endDate, string status)
         {
             var query = _context.Bookings
                 .Include(b => b.Car)
@@ -88,8 +56,14 @@ namespace CarRetalWebsite.Controllers
             return View(bookings);
         }
 
+        // Redirect cũ để đảm bảo các liên kết cũ vẫn chạy về đúng trang mới
+        public IActionResult MyBookings(string keyword, DateTime? startDate, DateTime? endDate, string status)
+        {
+            return RedirectToAction("Index", new { keyword, startDate, endDate, status });
+        }
+
         // GET: Đặt xe
-        public async Task<IActionResult> Book(int carId)
+        public async Task<IActionResult> Create(int carId, DateTime startDate, DateTime endDate)
         {
             var car = await _context.Cars
                 .Include(c => c.CarImages)
@@ -102,6 +76,9 @@ namespace CarRetalWebsite.Controllers
                 return RedirectToAction("Index");
             }
 
+            ViewBag.StartDate = startDate == DateTime.MinValue ? DateTime.Today : startDate;
+            ViewBag.EndDate = endDate == DateTime.MinValue ? DateTime.Today.AddDays(1) : endDate;
+
             return View(car);
         }
 
@@ -110,7 +87,10 @@ namespace CarRetalWebsite.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmBook(int carId, DateTime startDate, DateTime endDate)
         {
-            var car = await _context.Cars.FindAsync(carId);
+            var car = await _context.Cars
+                .Include(c => c.CarImages)
+                .Include(c => c.Type)
+                .FirstOrDefaultAsync(c => c.CarId == carId);
             if (car == null || car.Status != "Available")
             {
                 TempData["ErrorMessage"] = "Xe không tồn tại hoặc hiện không sẵn sàng.";
@@ -120,13 +100,17 @@ namespace CarRetalWebsite.Controllers
             if (startDate.Date < DateTime.Today)
             {
                 ModelState.AddModelError("", "Ngày bắt đầu thuê không được nhỏ hơn ngày hiện tại.");
-                return View("Book", car);
+                ViewBag.StartDate = startDate;
+                ViewBag.EndDate = endDate;
+                return View("Create", car);
             }
 
             if (endDate.Date < startDate.Date)
             {
                 ModelState.AddModelError("", "Ngày kết thúc thuê phải lớn hơn hoặc bằng ngày bắt đầu.");
-                return View("Book", car);
+                ViewBag.StartDate = startDate;
+                ViewBag.EndDate = endDate;
+                return View("Create", car);
             }
 
             // Kiểm tra xe có bị trùng lịch thuê khác không (đơn chưa hủy/từ chối)
@@ -141,11 +125,14 @@ namespace CarRetalWebsite.Controllers
             if (isOverlapping)
             {
                 ModelState.AddModelError("", "Xe đã được đặt trong khoảng thời gian này. Vui lòng chọn ngày thuê khác.");
-                return View("Book", car);
+                ViewBag.StartDate = startDate;
+                ViewBag.EndDate = endDate;
+                return View("Create", car);
             }
 
             // Áp dụng công thức tính toán phí thuê xe
-            int totalDays = (endDate.Date - startDate.Date).Days + 1;
+            int totalDays = (endDate.Date - startDate.Date).Days;
+            if (totalDays < 1) totalDays = 1;
             decimal subtotalFee = totalDays * car.PricePerDay;
             decimal platformCommission = subtotalFee * 0.10m; // 10% phí nền tảng
             decimal ownerPayout = subtotalFee - platformCommission;

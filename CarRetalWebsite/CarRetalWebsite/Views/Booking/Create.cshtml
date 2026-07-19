@@ -108,7 +108,7 @@
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/Booking/Index" class="text-decoration-none">Đặt xe</a></li>
+            <li class="breadcrumb-item"><a href="/Booking" class="text-decoration-none">Lịch sử đặt xe</a></li>
             <li class="breadcrumb-item active" aria-current="page">Đặt xe @Model.CarName</li>
         </ol>
     </nav>
@@ -178,14 +178,14 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold"><i class="fa-regular fa-calendar-plus text-primary me-2"></i>Ngày nhận xe</label>
                             <input type="date" id="StartDate" name="startDate" class="form-control py-2.5 rounded-3" 
-                                   required value="@DateTime.Today.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                   required value="@(ViewBag.StartDate != null ? ((DateTime)ViewBag.StartDate).ToString("yyyy-MM-dd") : DateTime.Today.ToString("yyyy-MM-dd"))" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                         </div>
 
                         <!-- End Date Input -->
                         <div class="mb-4">
                             <label class="form-label fw-bold"><i class="fa-regular fa-calendar-minus text-primary me-2"></i>Ngày trả xe</label>
                             <input type="date" id="EndDate" name="endDate" class="form-control py-2.5 rounded-3" 
-                                   required value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                   required value="@(ViewBag.EndDate != null ? ((DateTime)ViewBag.EndDate).ToString("yyyy-MM-dd") : DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"))" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                         </div>
 
                         <!-- Calculations Summary Panel -->
@@ -217,7 +217,7 @@
                             <button type="submit" class="btn-primary-custom w-100 py-3 border-0 fs-6">
                                 <i class="fa-solid fa-check-double me-2"></i> Xác nhận đặt xe
                             </button>
-                            <a href="/Booking/Index" class="btn btn-light w-100 py-2.5 mt-2 rounded-3 text-muted fw-bold">
+                            <a href="/Car/Index" class="btn btn-light w-100 py-2.5 mt-2 rounded-3 text-muted fw-bold">
                                 Quay lại danh sách xe
                             </a>
                         </div>
@@ -253,7 +253,8 @@
 
                 if (endDate >= startDate) {
                     const timeDiff = endDate.getTime() - startDate.getTime();
-                    const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+                    let totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    if (totalDays < 1) totalDays = 1;
 
                     const subtotal = totalDays * pricePerDay;
                     const commission = subtotal * 0.10;
