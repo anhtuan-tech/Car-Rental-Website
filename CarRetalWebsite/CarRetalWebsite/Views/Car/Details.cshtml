@@ -1,0 +1,519 @@
+@model CarRetalWebsite.Models.CarDetailsViewModel
+@{
+    ViewData["Title"] = Model.Car.CarName + " - Chi tiết thuê xe";
+
+    var primaryImage = Model.Car.CarImages?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                       ?? Model.Car.CarImages?.FirstOrDefault()?.ImageUrl 
+                       ?? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80";
+
+    var allImages = Model.Car.CarImages != null && Model.Car.CarImages.Any() 
+                    ? Model.Car.CarImages.Select(i => i.ImageUrl).ToList() 
+                    : new List<string> { primaryImage };
+}
+
+<style>
+    /* Details Visual Styling */
+    .car-details-header {
+        background: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 24px 0;
+    }
+
+    .main-car-img {
+        width: 100%;
+        height: 440px;
+        object-fit: cover;
+        border-radius: 20px;
+        box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+        transition: opacity 0.3s ease;
+    }
+
+    .thumb-img {
+        width: 100%;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 12px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s ease;
+        opacity: 0.7;
+    }
+
+    .thumb-img:hover, .thumb-img.active {
+        border-color: var(--primary-color, #0284c7);
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+
+    .spec-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 16px;
+        margin: 24px 0;
+    }
+
+    .spec-item-box {
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+        transition: all 0.25s ease;
+    }
+
+    .spec-item-box:hover {
+        background: #ffffff;
+        border-color: var(--primary-color, #0284c7);
+        box-shadow: 0 8px 20px rgba(2, 132, 199, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .spec-item-icon {
+        font-size: 1.5rem;
+        color: var(--primary-color, #0284c7);
+        margin-bottom: 8px;
+    }
+
+    .spec-item-label {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .spec-item-val {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: 2px;
+    }
+
+    .booking-sidebar-card {
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 15px 40px rgba(15, 23, 42, 0.09);
+        border: 1px solid #e2e8f0;
+        padding: 28px;
+        position: sticky;
+        top: 90px;
+    }
+
+    .price-tag-big {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary-color, #0284c7);
+    }
+
+    .feature-badge {
+        background: #f0f9ff;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 8px 14px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .owner-info-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+        border-radius: 20px;
+        padding: 20px;
+        border: 1px solid #bae6fd;
+    }
+
+    .rating-score-box {
+        background: #fffbe6;
+        border: 1px solid #ffe58f;
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+    }
+
+    .rating-num {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #d46b08;
+        line-height: 1;
+    }
+
+    .feedback-item {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid #f1f5f9;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    .owner-reply-box {
+        background: #f0fdf4;
+        border-left: 4px solid #22c55e;
+        border-radius: 0 12px 12px 0;
+        padding: 14px 18px;
+        margin-top: 12px;
+    }
+</style>
+
+<!-- Top Breadcrumb & Quick Title -->
+<section class="car-details-header">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2 fs-7 fw-semibold">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="/Car" class="text-decoration-none text-muted">Thuê xe</a></li>
+                <li class="breadcrumb-item active text-primary-custom" aria-current="page">@Model.Car.CarName</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h1 class="fw-extrabold text-dark mb-1">@Model.Car.CarName</h1>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-primary-custom px-3 py-2 rounded-pill fs-7 fw-semibold">@Model.Car.Type?.TypeName</span>
+                    <span class="text-muted fw-medium fs-7"><i class="fa-solid fa-car text-primary-custom me-1"></i> Hãng: <strong>@Model.Car.Brand</strong></span>
+                    <span class="text-muted fw-medium fs-7"><i class="fa-solid fa-barcode text-primary-custom me-1"></i> Đời xe: <strong>@Model.Car.Model</strong></span>
+                </div>
+            </div>
+            <div>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill fs-7 fw-bold">
+                    <i class="fa-solid fa-circle-check me-1"></i> Sẵn sàng cho thuê
+                </span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Details Section -->
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Left Column: Media & Specifications & Reviews -->
+        <div class="col-lg-8">
+            <!-- Image Gallery (UC-09) -->
+            <div class="mb-4" data-aos="fade-up">
+                <img src="@primaryImage" id="mainCarImage" alt="@Model.Car.CarName" class="main-car-img mb-3" />
+                
+                @if (allImages.Count > 1)
+                {
+                    <div class="row g-2">
+                        @for (int i = 0; i < allImages.Count; i++)
+                        {
+                            <div class="col-3 col-sm-2">
+                                <img src="@allImages[i]" class="thumb-img @(i == 0 ? "active" : "")" onclick="changeImage(this, '@allImages[i]')" alt="Thumbnail" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Specifications Grid (UC-09) -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-info text-primary-custom me-2"></i> Thông Số Kỹ Thuật</h4>
+                
+                <div class="spec-card-grid">
+                    <div class="spec-item-box">
+                        <div class="spec-item-icon"><i class="fa-solid fa-users"></i></div>
+                        <div class="spec-item-label">Số chỗ ngồi</div>
+                        <div class="spec-item-val">@Model.Specs.Seats chỗ</div>
+                    </div>
+                    <div class="spec-item-box">
+                        <div class="spec-item-icon"><i class="fa-solid fa-gears"></i></div>
+                        <div class="spec-item-label">Hộp số</div>
+                        <div class="spec-item-val">@Model.Specs.Transmission</div>
+                    </div>
+                    <div class="spec-item-box">
+                        <div class="spec-item-icon"><i class="fa-solid fa-gas-pump"></i></div>
+                        <div class="spec-item-label">Nhiên liệu</div>
+                        <div class="spec-item-val">@Model.Specs.Fuel</div>
+                    </div>
+                    <div class="spec-item-box">
+                        <div class="spec-item-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                        <div class="spec-item-label">Mức tiêu thụ</div>
+                        <div class="spec-item-val">@Model.Specs.Consumption</div>
+                    </div>
+                    <div class="spec-item-box">
+                        <div class="spec-item-icon"><i class="fa-solid fa-microchip"></i></div>
+                        <div class="spec-item-label">Động cơ</div>
+                        <div class="spec-item-val">@Model.Specs.Engine</div>
+                    </div>
+                    <div class="spec-item-box">
+                        <div class="spec-item-icon"><i class="fa-regular fa-calendar text-primary-custom"></i></div>
+                        <div class="spec-item-label">Năm sản xuất</div>
+                        <div class="spec-item-val">@Model.Specs.Year</div>
+                    </div>
+                </div>
+
+                <!-- Features List -->
+                <h5 class="fw-bold text-dark mt-3 mb-3">Tính Năng Tiện Nghi & An Toàn</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var feat in Model.Specs.Features)
+                    {
+                        <span class="feature-badge"><i class="fa-solid fa-check-circle text-primary-custom"></i> @feat</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Owner & Garage Info Card -->
+            <div class="owner-info-card mb-4" data-aos="fade-up">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="@(string.IsNullOrEmpty(Model.Car.Owner?.Profile?.AvatarUrl) ? "/images/default-avatar.svg" : Model.Car.Owner.Profile.AvatarUrl)" alt="Owner" class="rounded-circle" style="width: 54px; height: 54px; object-fit: cover; border: 2px solid #ffffff;" />
+                        <div>
+                            <span class="badge bg-primary text-white mb-1 fs-8 fw-semibold">Chủ xe đối tác Gara</span>
+                            <h5 class="fw-bold mb-0 text-dark">@(Model.Car.Owner?.Profile?.FullName ?? "Chủ xe Gara")</h5>
+                            <span class="text-muted fs-7"><i class="fa-solid fa-shield-check text-success me-1"></i> Tài khoản chính thức đã xác minh</span>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="tel:@Model.Car.Owner?.PhoneNumber" class="btn btn-outline-primary rounded-pill px-3 py-2 btn-sm fw-semibold">
+                            <i class="fa-solid fa-phone me-1"></i> Liên hệ Gara
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rental Terms & Documents Needed -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" data-aos="fade-up">
+                <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-contract text-primary-custom me-2"></i> Giấy Tờ & Điều Khoản Thuê Xe</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-id-card text-primary-custom me-2"></i> Giấy tờ bắt buộc</h6>
+                            <ul class="mb-0 text-muted fs-7 ps-3">
+                                <li>CMND / CCCD / Hộ chiếu còn hiệu lực</li>
+                                <li>Giấy phép lái xe hạng B2 trở lên (bản gốc)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-vault text-primary-custom me-2"></i> Tài sản thế chấp</h6>
+                            <ul class="mb-0 text-muted fs-7 ps-3">
+                                <li>15.000.000 VNĐ tiền mặt/chuyển khoản cọc</li>
+                                <li>Hoặc xe máy có cavet đứng tên chính chủ</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews & Feedback Section (UC-09 & Flow 2 Step 5) -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" data-aos="fade-up">
+                <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-star text-warning me-2"></i> Đánh Giá Dịch Vụ Khách Hàng</h4>
+
+                <div class="row g-4 align-items-center mb-4">
+                    <div class="col-md-4">
+                        <div class="rating-score-box">
+                            <div class="rating-num">@Model.AverageRating</div>
+                            <div class="text-warning fs-5 my-1">
+                                @for (int s = 1; s <= 5; s++)
+                                {
+                                    if (s <= Math.Round(Model.AverageRating))
+                                    {
+                                        <i class="fa-solid fa-star"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-regular fa-star"></i>
+                                    }
+                                }
+                            </div>
+                            <div class="text-muted fs-7 fw-semibold">(@Model.TotalReviews lượt đánh giá)</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        @for (int star = 5; star >= 1; star--)
+                        {
+                            var count = Model.RatingBreakdown.ContainsKey(star) ? Model.RatingBreakdown[star] : 0;
+                            var pct = Model.TotalReviews > 0 ? (count * 100 / Model.TotalReviews) : 0;
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="fs-7 fw-bold text-dark style-width-30">@star <i class="fa-solid fa-star text-warning fs-8"></i></span>
+                                <div class="progress flex-grow-1" style="height: 8px; border-radius: 4px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: @pct%" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <span class="fs-7 text-muted style-width-40 text-end">@count</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Feedback List -->
+                @if (Model.Feedbacks != null && Model.Feedbacks.Any())
+                {
+                    <div class="feedback-list">
+                        @foreach (var fb in Model.Feedbacks)
+                        {
+                            <div class="feedback-item">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="@(string.IsNullOrEmpty(fb.Customer?.Profile?.AvatarUrl) ? "/images/default-avatar.svg" : fb.Customer.Profile.AvatarUrl)" alt="Customer Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
+                                        <div>
+                                            <h6 class="fw-bold mb-0 text-dark">@(fb.Customer?.Profile?.FullName ?? "Khách hàng")</h6>
+                                            <span class="text-muted fs-8">@fb.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-warning">
+                                        @for (int s = 1; s <= 5; s++)
+                                        {
+                                            if (s <= fb.Rating)
+                                            {
+                                                <i class="fa-solid fa-star fs-7"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa-regular fa-star fs-7"></i>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+
+                                <p class="text-secondary fs-7 mb-0">@fb.Comment</p>
+
+                                @if (!string.IsNullOrEmpty(fb.OwnerReply))
+                                {
+                                    <div class="owner-reply-box">
+                                        <div class="fw-bold text-success fs-8 mb-1"><i class="fa-solid fa-reply me-1"></i> Phản hồi từ Chủ xe:</div>
+                                        <div class="text-dark fs-7">@fb.OwnerReply</div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted fs-7">
+                        <i class="fa-regular fa-comment-dots fs-3 d-block mb-2 text-secondary"></i>
+                        Chưa có đánh giá nào cho xe này. Hãy là khách hàng đầu tiên trải nghiệm!
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Right Column: Interactive Booking Widget Box (Flow 2) -->
+        <div class="col-lg-4">
+            <div class="booking-sidebar-card" data-aos="fade-left">
+                <div class="d-flex align-items-baseline gap-2 mb-3">
+                    <span class="price-tag-big" id="pricePerDayDisplay">@Model.Car.PricePerDay.ToString("N0")</span>
+                    <span class="text-muted fw-semibold">đ / ngày</span>
+                </div>
+
+                <hr class="my-3 opacity-50" />
+
+                <!-- Date Selection & Price Calculator Form -->
+                <form action="/Booking/Create" method="GET" id="bookingCalculatorForm">
+                    <input type="hidden" name="carId" value="@Model.Car.CarId" />
+
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-regular fa-calendar-plus text-primary-custom me-1"></i> Ngày nhận xe</label>
+                        <input type="date" class="form-control form-control-custom" id="startDateInput" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" onchange="calculatePrice()" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-regular fa-calendar-minus text-primary-custom me-1"></i> Ngày trả xe</label>
+                        <input type="date" class="form-control form-control-custom" id="endDateInput" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" onchange="calculatePrice()" />
+                    </div>
+
+                    <!-- Financial Breakdown Box (Flow 2 Step 2) -->
+                    <div class="p-3 bg-light rounded-3 my-3">
+                        <div class="d-flex justify-content-between mb-2 fs-7 text-secondary">
+                            <span>Thời gian thuê:</span>
+                            <strong id="totalDaysDisplay" class="text-dark">@Model.TotalDays ngày</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 fs-7 text-secondary">
+                            <span>Đơn giá ngày:</span>
+                            <span class="text-dark">@Model.Car.PricePerDay.ToString("N0") đ</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 fs-7 text-secondary">
+                            <span>Phí dịch vụ gara (10%):</span>
+                            <span class="text-muted" id="commissionDisplay">@Model.PlatformCommission.ToString("N0") đ</span>
+                        </div>
+                        <hr class="my-2 opacity-50" />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark">Tổng tiền thanh toán:</span>
+                            <span class="fw-extrabold text-primary-custom fs-5" id="subtotalFeeDisplay">@Model.SubtotalFee.ToString("N0") đ</span>
+                        </div>
+                    </div>
+
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <button type="submit" class="btn-primary-custom w-100 py-3 fs-6 font-semibold" id="submitBookingBtn">
+                            <i class="fa-solid fa-key me-2"></i> Tiến Hành Đặt Xe
+                        </button>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login?returnUrl=/Car/Details/@Model.Car.CarId" class="btn-primary-custom w-100 py-3 fs-6 font-semibold text-center d-block text-decoration-none">
+                            <i class="fa-solid fa-right-to-bracket me-2"></i> Đăng Nhập Để Đặt Xe
+                        </a>
+                    }
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Cars Grid -->
+    @if (Model.RelatedCars != null && Model.RelatedCars.Any())
+    {
+        <div class="mt-5 pt-4 border-top">
+            <h3 class="fw-bold text-dark mb-4" data-aos="fade-up"><i class="fa-solid fa-car-side text-primary-custom me-2"></i> Các Xe Tương Tự Sẵn Có</h3>
+            <div class="row g-4">
+                @foreach (var relCar in Model.RelatedCars)
+                {
+                    <div class="col-md-4" data-aos="fade-up">
+                        @await Html.PartialAsync("_CarCard", relCar)
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        const unitPrice = @Model.Car.PricePerDay;
+
+        function changeImage(element, newUrl) {
+            const mainImg = document.getElementById('mainCarImage');
+            mainImg.style.opacity = '0.4';
+            setTimeout(() => {
+                mainImg.src = newUrl;
+                mainImg.style.opacity = '1';
+            }, 150);
+
+            document.querySelectorAll('.thumb-img').forEach(t => t.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        function calculatePrice() {
+            const startVal = document.getElementById('startDateInput').value;
+            const endVal = document.getElementById('endDateInput').value;
+
+            if (!startVal || !endVal) return;
+
+            const start = new Date(startVal);
+            const end = new Date(endVal);
+
+            if (end < start) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Ngày không hợp lệ',
+                    text: 'Ngày trả xe phải bằng hoặc sau ngày nhận xe!',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+            const subtotal = diffDays * unitPrice;
+            const commission = subtotal * 0.10;
+
+            document.getElementById('totalDaysDisplay').innerText = diffDays + ' ngày';
+            document.getElementById('commissionDisplay').innerText = commission.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('subtotalFeeDisplay').innerText = subtotal.toLocaleString('vi-VN') + ' đ';
+        }
+    </script>
+}

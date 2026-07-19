@@ -25,6 +25,13 @@ namespace CarRetalWebsite
 
             var app = builder.Build();
 
+            // Seed mock data
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<CarRentalDbContext>();
+                CarRetalWebsite.Services.DbInitializer.SeedAsync(context).GetAwaiter().GetResult();
+            }
+
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
