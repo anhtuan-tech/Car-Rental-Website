@@ -1,4 +1,4 @@
-﻿@model CarRetalWebsite.Models.Car
+@model CarRetalWebsite.Models.Car
 @{
     var imageUrl = Model.CarImages?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
                    ?? Model.CarImages?.FirstOrDefault()?.ImageUrl 
@@ -15,6 +15,15 @@
     {
         fuel = "Dầu";
     }
+
+    var ratingsDict = ViewData["CarRatings"] as Dictionary<int, CarRetalWebsite.Models.CarRatingStats>;
+    double avgRating = 5.0;
+    int reviewCount = 0;
+    if (ratingsDict != null && ratingsDict.TryGetValue(Model.CarId, out var stats))
+    {
+        avgRating = stats.AverageRating;
+        reviewCount = stats.ReviewCount;
+    }
 }
 <div class="car-card">
     <div class="car-card-img-wrapper">
@@ -22,7 +31,21 @@
         <span class="car-badge">@Model.Type?.TypeName</span>
     </div>
     <div class="car-card-body">
-        <h3 class="car-name">@Model.CarName</h3>
+        <div class="d-flex justify-content-between align-items-start mb-1">
+            <h3 class="car-name mb-0">@Model.CarName</h3>
+            @if (reviewCount > 0)
+            {
+                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 px-2 py-1 rounded-pill fs-8 fw-bold">
+                    <i class="fa-solid fa-star text-warning me-1"></i>@avgRating <span class="text-muted fw-normal">(@reviewCount)</span>
+                </span>
+            }
+            else
+            {
+                <span class="badge bg-light text-muted border px-2 py-1 rounded-pill fs-8 fw-semibold">
+                    Mới
+                </span>
+            }
+        </div>
         <div class="car-brand">Hãng xe: @Model.Brand</div>
         
         <div class="car-specs">

@@ -19,7 +19,7 @@ namespace CarRetalWebsite.Controllers
         }
 
         // ====================================================================
-        // UC-08: VIEW RENTAL CARS (Guest, Customer)
+        // UC-10: SEARCH RENTAL CARS (Guest, Customer)
         // ====================================================================
         [HttpGet]
         public async Task<IActionResult> Index(CarSearchViewModel search)
@@ -36,6 +36,22 @@ namespace CarRetalWebsite.Controllers
             if (search.StartDate.HasValue && (!search.EndDate.HasValue || search.EndDate.Value.Date < search.StartDate.Value.Date))
             {
                 search.EndDate = search.StartDate.Value.AddDays(2);
+            }
+
+            // Validate price range
+            if (search.MinPrice.HasValue && search.MinPrice.Value < 0)
+            {
+                search.MinPrice = null;
+            }
+            if (search.MaxPrice.HasValue && search.MaxPrice.Value < 0)
+            {
+                search.MaxPrice = null;
+            }
+            if (search.MinPrice.HasValue && search.MaxPrice.HasValue && search.MaxPrice.Value < search.MinPrice.Value)
+            {
+                var temp = search.MinPrice;
+                search.MinPrice = search.MaxPrice;
+                search.MaxPrice = temp;
             }
 
             // Query only available cars
@@ -68,11 +84,11 @@ namespace CarRetalWebsite.Controllers
             }
 
             // Filter Price Range
-            if (search.MinPrice.HasValue && search.MinPrice.Value >= 0)
+            if (search.MinPrice.HasValue)
             {
                 query = query.Where(c => c.PricePerDay >= search.MinPrice.Value);
             }
-            if (search.MaxPrice.HasValue && search.MaxPrice.Value > 0)
+            if (search.MaxPrice.HasValue)
             {
                 query = query.Where(c => c.PricePerDay <= search.MaxPrice.Value);
             }
@@ -89,6 +105,15 @@ namespace CarRetalWebsite.Controllers
             {
                 var fuel = search.Fuel.Trim();
                 query = query.Where(c => c.SpecsJson != null && c.SpecsJson.Contains(fuel));
+            }
+
+            // Filter by Minimum Rating if requested
+            if (search.MinRating.HasValue && search.MinRating.Value >= 1 && search.MinRating.Value <= 5)
+            {
+                var minR = search.MinRating.Value;
+                query = query.Where(c => _context.Feedbacks
+                    .Where(f => f.Booking.CarId == c.CarId)
+                    .Average(f => (double?)f.Rating) >= minR);
             }
 
             // Filter by Date Availability
@@ -117,6 +142,11 @@ namespace CarRetalWebsite.Controllers
                 case "price_desc":
                     query = query.OrderByDescending(c => c.PricePerDay);
                     break;
+                case "rating_desc":
+                    query = query.OrderByDescending(c => _context.Feedbacks
+                        .Where(f => f.Booking.CarId == c.CarId)
+                        .Average(f => (double?)f.Rating) ?? 5.0);
+                    break;
                 case "newest":
                 default:
                     query = query.OrderByDescending(c => c.CarId);
@@ -127,11 +157,42 @@ namespace CarRetalWebsite.Controllers
             // Total count for pagination
             search.TotalItems = await query.CountAsync();
 
+            // Sanitize page upper bound
+            if (search.TotalPages > 0 && search.Page > search.TotalPages)
+            {
+                search.Page = search.TotalPages;
+            }
+
             // Execute paginated query
             search.Cars = await query
                 .Skip((search.Page - 1) * search.PageSize)
                 .Take(search.PageSize)
                 .ToListAsync();
+
+            // Load rating statistics for cars on current page
+            var pageCarIds = search.Cars.Select(c => c.CarId).ToList();
+            if (pageCarIds.Any())
+            {
+                var ratingData = await _context.Feedbacks
+                    .Where(f => pageCarIds.Contains(f.Booking.CarId))
+                    .GroupBy(f => f.Booking.CarId)
+                    .Select(g => new
+                    {
+                        CarId = g.Key,
+                        Avg = Math.Round(g.Average(f => f.Rating), 1),
+                        Count = g.Count()
+                    })
+                    .ToListAsync();
+
+                foreach (var r in ratingData)
+                {
+                    search.CarRatings[r.CarId] = new CarRatingStats
+                    {
+                        AverageRating = r.Avg,
+                        ReviewCount = r.Count
+                    };
+                }
+            }
 
             // Load CarTypes and distinct Brands for filter options
             search.CarTypes = await _context.CarTypes.ToListAsync();
@@ -146,10 +207,11 @@ namespace CarRetalWebsite.Controllers
         }
 
         // ====================================================================
+        // UC-11: VIEW CAR REVIEWS (Guest, Customer)
         // UC-09: VIEW RENTAL CAR DETAILS (Guest, Customer)
         // ====================================================================
         [HttpGet]
-        public async Task<IActionResult> Details(int id, DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> Details(int id, DateTime? startDate, DateTime? endDate, int? ratingFilter)
         {
             var car = await _context.Cars
                 .Include(c => c.CarImages)
@@ -175,7 +237,7 @@ namespace CarRetalWebsite.Controllers
             var specsDetail = ParseSpecsJson(car.SpecsJson);
 
             // Fetch Feedbacks for this car via Bookings
-            var feedbacks = await _context.Feedbacks
+            var allFeedbacks = await _context.Feedbacks
                 .Include(f => f.Customer)
                 .ThenInclude(c => c.Profile)
                 .Include(f => f.Booking)
@@ -183,9 +245,9 @@ namespace CarRetalWebsite.Controllers
                 .OrderByDescending(f => f.CreatedAt)
                 .ToListAsync();
 
-            // Calculate rating stats
+            // Calculate overall rating stats
             double avgRating = 5.0;
-            int totalReviews = feedbacks.Count;
+            int totalReviews = allFeedbacks.Count;
             var ratingBreakdown = new Dictionary<int, int>
             {
                 { 5, 0 }, { 4, 0 }, { 3, 0 }, { 2, 0 }, { 1, 0 }
@@ -193,14 +255,21 @@ namespace CarRetalWebsite.Controllers
 
             if (totalReviews > 0)
             {
-                avgRating = Math.Round(feedbacks.Average(f => f.Rating), 1);
-                foreach (var fb in feedbacks)
+                avgRating = Math.Round(allFeedbacks.Average(f => f.Rating), 1);
+                foreach (var fb in allFeedbacks)
                 {
                     if (ratingBreakdown.ContainsKey(fb.Rating))
                     {
                         ratingBreakdown[fb.Rating]++;
                     }
                 }
+            }
+
+            // Filter feedbacks list if ratingFilter is specified
+            var displayedFeedbacks = allFeedbacks;
+            if (ratingFilter.HasValue && ratingFilter.Value >= 1 && ratingFilter.Value <= 5)
+            {
+                displayedFeedbacks = allFeedbacks.Where(f => f.Rating == ratingFilter.Value).ToList();
             }
 
             // Fetch booked date ranges for calendar widget
@@ -229,8 +298,9 @@ namespace CarRetalWebsite.Controllers
                 EndDate = end,
                 AverageRating = avgRating,
                 TotalReviews = totalReviews,
+                SelectedRatingFilter = ratingFilter,
                 RatingBreakdown = ratingBreakdown,
-                Feedbacks = feedbacks,
+                Feedbacks = displayedFeedbacks,
                 RelatedCars = relatedCars,
                 BookedRanges = activeBookings
             };

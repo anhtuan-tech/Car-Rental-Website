@@ -150,7 +150,7 @@
 <!-- Main Catalog Container -->
 <div class="container py-5">
     <div class="row g-4">
-        <!-- Sidebar Filter (UC-08) -->
+        <!-- Sidebar Filter (UC-10) -->
         <div class="col-lg-3">
             <div class="filter-sidebar" data-aos="fade-right">
                 <div class="filter-header">
@@ -158,7 +158,7 @@
                     <a href="/Car" class="btn btn-sm btn-link text-decoration-none text-muted p-0 fs-7">Làm mới</a>
                 </div>
 
-                <form action="/Car" method="GET" id="searchFilterForm">
+                <form action="/Car" method="GET" id="searchFilterForm" onsubmit="return validateSearchForm()">
                     <!-- Hidden sort & page state -->
                     <input type="hidden" name="sortBy" value="@Model.SortBy" />
 
@@ -171,11 +171,11 @@
                     <!-- Dates selection -->
                     <div class="mb-3">
                         <label class="form-label-custom"><i class="fa-regular fa-calendar-plus text-muted me-1"></i> Ngày nhận xe</label>
-                        <input type="date" class="form-control form-control-custom" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" />
+                        <input type="date" class="form-control form-control-custom" id="startDateInput" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label-custom"><i class="fa-regular fa-calendar-minus text-muted me-1"></i> Ngày trả xe</label>
-                        <input type="date" class="form-control form-control-custom" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" />
+                        <input type="date" class="form-control form-control-custom" id="endDateInput" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                     </div>
 
                     <!-- Car Type filter -->
@@ -223,15 +223,26 @@
                         </select>
                     </div>
 
+                    <!-- Min Rating filter -->
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-solid fa-star text-warning me-1"></i> Đánh giá tối thiểu</label>
+                        <select class="form-select form-select-custom" name="minRating">
+                            <option value="">Tất cả đánh giá</option>
+                            <option value="5" selected="@(Model.MinRating == 5 ? "selected" : null)">5 Sao (Tuyệt hảo)</option>
+                            <option value="4" selected="@(Model.MinRating == 4 ? "selected" : null)">Từ 4 Sao trở lên</option>
+                            <option value="3" selected="@(Model.MinRating == 3 ? "selected" : null)">Từ 3 Sao trở lên</option>
+                        </select>
+                    </div>
+
                     <!-- Price Range -->
                     <div class="mb-4">
                         <label class="form-label-custom"><i class="fa-solid fa-tag text-muted me-1"></i> Mức giá / Ngày (VNĐ)</label>
                         <div class="row g-2">
                             <div class="col-6">
-                                <input type="number" step="50000" min="0" class="form-control form-control-custom" name="minPrice" placeholder="Từ" value="@(Model.MinPrice.HasValue ? Model.MinPrice.Value.ToString("0") : "")" />
+                                <input type="number" step="50000" min="0" class="form-control form-control-custom" id="minPriceInput" name="minPrice" placeholder="Từ" value="@(Model.MinPrice.HasValue ? Model.MinPrice.Value.ToString("0") : "")" />
                             </div>
                             <div class="col-6">
-                                <input type="number" step="50000" min="0" class="form-control form-control-custom" name="maxPrice" placeholder="Đến" value="@(Model.MaxPrice.HasValue ? Model.MaxPrice.Value.ToString("0") : "")" />
+                                <input type="number" step="50000" min="0" class="form-control form-control-custom" id="maxPriceInput" name="maxPrice" placeholder="Đến" value="@(Model.MaxPrice.HasValue ? Model.MaxPrice.Value.ToString("0") : "")" />
                             </div>
                         </div>
                     </div>
@@ -249,7 +260,7 @@
             <div class="sorting-toolbar" data-aos="fade-left">
                 <div>
                     <span class="fw-bold text-dark me-2">Tìm thấy <span class="text-primary-custom">@Model.TotalItems</span> xe sẵn sàng</span>
-                    @if (!string.IsNullOrEmpty(Model.Keyword) || Model.TypeId.HasValue || !string.IsNullOrEmpty(Model.Brand) || !string.IsNullOrEmpty(Model.Transmission) || !string.IsNullOrEmpty(Model.Fuel) || Model.MinPrice.HasValue || Model.MaxPrice.HasValue)
+                    @if (!string.IsNullOrEmpty(Model.Keyword) || Model.TypeId.HasValue || !string.IsNullOrEmpty(Model.Brand) || !string.IsNullOrEmpty(Model.Transmission) || !string.IsNullOrEmpty(Model.Fuel) || Model.MinRating.HasValue || Model.MinPrice.HasValue || Model.MaxPrice.HasValue)
                     {
                         <div class="d-inline-flex flex-wrap gap-2 ms-2 mt-2 mt-sm-0">
                             @if (!string.IsNullOrEmpty(Model.Keyword))
@@ -273,6 +284,14 @@
                             {
                                 <span class="active-filter-chip">@Model.Fuel</span>
                             }
+                            @if (Model.MinRating.HasValue)
+                            {
+                                <span class="active-filter-chip">≥ @Model.MinRating ★</span>
+                            }
+                            @if (Model.MinPrice.HasValue || Model.MaxPrice.HasValue)
+                            {
+                                <span class="active-filter-chip">Giá: @(Model.MinPrice.HasValue ? Model.MinPrice.Value.ToString("N0") : "0")đ - @(Model.MaxPrice.HasValue ? Model.MaxPrice.Value.ToString("N0") : "∞")đ</span>
+                            }
                         </div>
                     }
                 </div>
@@ -281,6 +300,7 @@
                     <label class="form-label-custom mb-0 me-1">Sắp xếp:</label>
                     <select class="form-select form-select-custom form-select-sm w-auto" id="sortSelect" onchange="changeSort(this.value)">
                         <option value="newest" selected="@(Model.SortBy == "newest" ? "selected" : null)">Mới nhất</option>
+                        <option value="rating_desc" selected="@(Model.SortBy == "rating_desc" ? "selected" : null)">Đánh giá cao nhất</option>
                         <option value="price_asc" selected="@(Model.SortBy == "price_asc" ? "selected" : null)">Giá: Thấp -> Cao</option>
                         <option value="price_desc" selected="@(Model.SortBy == "price_desc" ? "selected" : null)">Giá: Cao -> Thấp</option>
                     </select>
@@ -290,11 +310,12 @@
             <!-- Cars Grid -->
             @if (Model.Cars != null && Model.Cars.Any())
             {
+                ViewData["CarRatings"] = Model.CarRatings;
                 <div class="row g-4">
                     @foreach (var car in Model.Cars)
                     {
                         <div class="col-md-6 col-xl-4" data-aos="fade-up">
-                            @await Html.PartialAsync("_CarCard", car)
+                            @await Html.PartialAsync("_CarCard", car, ViewData)
                         </div>
                     }
                 </div>
@@ -307,7 +328,7 @@
                             @if (Model.Page > 1)
                             {
                                 <li class="page-item">
-                                    <a class="page-link" href="@Url.Action("Index", "Car", new { keyword = Model.Keyword, typeId = Model.TypeId, brand = Model.Brand, transmission = Model.Transmission, fuel = Model.Fuel, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, startDate = Model.StartDate?.ToString("yyyy-MM-dd"), endDate = Model.EndDate?.ToString("yyyy-MM-dd"), sortBy = Model.SortBy, page = Model.Page - 1 })">
+                                    <a class="page-link" href="@Url.Action("Index", "Car", new { keyword = Model.Keyword, typeId = Model.TypeId, brand = Model.Brand, transmission = Model.Transmission, fuel = Model.Fuel, minRating = Model.MinRating, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, startDate = Model.StartDate?.ToString("yyyy-MM-dd"), endDate = Model.EndDate?.ToString("yyyy-MM-dd"), sortBy = Model.SortBy, page = Model.Page - 1 })">
                                         <i class="fa-solid fa-chevron-left"></i>
                                     </a>
                                 </li>
@@ -316,14 +337,14 @@
                             @for (int p = 1; p <= Model.TotalPages; p++)
                             {
                                 <li class="page-item @(p == Model.Page ? "active" : "")">
-                                    <a class="page-link" href="@Url.Action("Index", "Car", new { keyword = Model.Keyword, typeId = Model.TypeId, brand = Model.Brand, transmission = Model.Transmission, fuel = Model.Fuel, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, startDate = Model.StartDate?.ToString("yyyy-MM-dd"), endDate = Model.EndDate?.ToString("yyyy-MM-dd"), sortBy = Model.SortBy, page = p })">@p</a>
+                                    <a class="page-link" href="@Url.Action("Index", "Car", new { keyword = Model.Keyword, typeId = Model.TypeId, brand = Model.Brand, transmission = Model.Transmission, fuel = Model.Fuel, minRating = Model.MinRating, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, startDate = Model.StartDate?.ToString("yyyy-MM-dd"), endDate = Model.EndDate?.ToString("yyyy-MM-dd"), sortBy = Model.SortBy, page = p })">@p</a>
                                 </li>
                             }
 
                             @if (Model.Page < Model.TotalPages)
                             {
                                 <li class="page-item">
-                                    <a class="page-link" href="@Url.Action("Index", "Car", new { keyword = Model.Keyword, typeId = Model.TypeId, brand = Model.Brand, transmission = Model.Transmission, fuel = Model.Fuel, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, startDate = Model.StartDate?.ToString("yyyy-MM-dd"), endDate = Model.EndDate?.ToString("yyyy-MM-dd"), sortBy = Model.SortBy, page = Model.Page + 1 })">
+                                    <a class="page-link" href="@Url.Action("Index", "Car", new { keyword = Model.Keyword, typeId = Model.TypeId, brand = Model.Brand, transmission = Model.Transmission, fuel = Model.Fuel, minRating = Model.MinRating, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, startDate = Model.StartDate?.ToString("yyyy-MM-dd"), endDate = Model.EndDate?.ToString("yyyy-MM-dd"), sortBy = Model.SortBy, page = Model.Page + 1 })">
                                         <i class="fa-solid fa-chevron-right"></i>
                                     </a>
                                 </li>
@@ -356,6 +377,39 @@
             const form = document.getElementById('searchFilterForm');
             form.querySelector('input[name="sortBy"]').value = sortValue;
             form.submit();
+        }
+
+        function validateSearchForm() {
+            const startInput = document.getElementById('startDateInput').value;
+            const endInput = document.getElementById('endDateInput').value;
+            const minPrice = parseFloat(document.getElementById('minPriceInput').value);
+            const maxPrice = parseFloat(document.getElementById('maxPriceInput').value);
+
+            if (startInput && endInput) {
+                const s = new Date(startInput);
+                const e = new Date(endInput);
+                if (e < s) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Khoảng thời gian không hợp lệ',
+                        text: 'Ngày trả xe phải bằng hoặc sau ngày nhận xe!',
+                        confirmButtonColor: '#0284c7'
+                    });
+                    return false;
+                }
+            }
+
+            if (!isNaN(minPrice) && !isNaN(maxPrice) && maxPrice < minPrice) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Khoảng giá không hợp lệ',
+                    text: 'Giá tối đa phải lớn hơn hoặc bằng giá tối thiểu!',
+                    confirmButtonColor: '#0284c7'
+                });
+                return false;
+            }
+
+            return true;
         }
     </script>
 }

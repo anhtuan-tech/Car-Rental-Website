@@ -13,6 +13,7 @@ namespace CarRetalWebsite.Models
         public string? Fuel { get; set; } // "Xăng", "Dầu", "Điện", "Hybrid"
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
+        public int? MinRating { get; set; } // Lọc theo số sao tối thiểu (vd: >= 4 sao)
 
         [DataType(DataType.Date)]
         public DateTime? StartDate { get; set; }
@@ -20,7 +21,7 @@ namespace CarRetalWebsite.Models
         [DataType(DataType.Date)]
         public DateTime? EndDate { get; set; }
 
-        public string SortBy { get; set; } = "newest"; // "newest", "price_asc", "price_desc"
+        public string SortBy { get; set; } = "newest"; // "newest", "price_asc", "price_desc", "rating_desc"
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 9;
 
@@ -28,8 +29,18 @@ namespace CarRetalWebsite.Models
         public List<Car> Cars { get; set; } = new List<Car>();
         public List<CarType> CarTypes { get; set; } = new List<CarType>();
         public List<string> Brands { get; set; } = new List<string>();
+        
+        // Dictionary mapping CarId -> Rating Stats
+        public Dictionary<int, CarRatingStats> CarRatings { get; set; } = new Dictionary<int, CarRatingStats>();
+
         public int TotalItems { get; set; }
         public int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
+    }
+
+    public class CarRatingStats
+    {
+        public double AverageRating { get; set; } = 5.0;
+        public int ReviewCount { get; set; } = 0;
     }
 
     public class CarSpecsDetail
@@ -59,6 +70,7 @@ namespace CarRetalWebsite.Models
         // Feedback / Rating statistics
         public double AverageRating { get; set; } = 5.0;
         public int TotalReviews { get; set; } = 0;
+        public int? SelectedRatingFilter { get; set; } // null/0: Tất cả, 1..5 sao
         public Dictionary<int, int> RatingBreakdown { get; set; } = new Dictionary<int, int>();
         public List<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 

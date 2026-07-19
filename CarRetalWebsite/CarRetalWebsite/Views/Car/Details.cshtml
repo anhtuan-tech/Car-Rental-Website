@@ -298,8 +298,8 @@
                 </div>
             </div>
 
-            <!-- Reviews & Feedback Section (UC-09 & Flow 2 Step 5) -->
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" data-aos="fade-up">
+            <!-- Reviews & Feedback Section (UC-11 & Flow 2 Step 5) -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" id="reviewsSection" data-aos="fade-up">
                 <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-star text-warning me-2"></i> Đánh Giá Dịch Vụ Khách Hàng</h4>
 
                 <div class="row g-4 align-items-center mb-4">
@@ -339,6 +339,28 @@
                     </div>
                 </div>
 
+                <!-- Star Rating Filter Chips (UC-11) -->
+                @if (Model.TotalReviews > 0)
+                {
+                    <div class="d-flex flex-wrap gap-2 mb-4 pb-3 border-bottom">
+                        <a href="@Url.Action("Details", "Car", new { id = Model.Car.CarId, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd") })#reviewsSection"
+                           class="btn btn-sm @(!Model.SelectedRatingFilter.HasValue || Model.SelectedRatingFilter.Value == 0 ? "btn-primary-custom" : "btn-outline-secondary") rounded-pill px-3">
+                            Tất cả (@Model.TotalReviews)
+                        </a>
+                        @for (int star = 5; star >= 1; star--)
+                        {
+                            var count = Model.RatingBreakdown.ContainsKey(star) ? Model.RatingBreakdown[star] : 0;
+                            if (count > 0 || (Model.SelectedRatingFilter.HasValue && Model.SelectedRatingFilter.Value == star))
+                            {
+                                <a href="@Url.Action("Details", "Car", new { id = Model.Car.CarId, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), ratingFilter = star })#reviewsSection"
+                                   class="btn btn-sm @(Model.SelectedRatingFilter == star ? "btn-primary-custom" : "btn-outline-secondary") rounded-pill px-3">
+                                    @star <i class="fa-solid fa-star text-warning me-1"></i> (@count)
+                                </a>
+                            }
+                        }
+                    </div>
+                }
+
                 <!-- Feedback List -->
                 @if (Model.Feedbacks != null && Model.Feedbacks.Any())
                 {
@@ -374,7 +396,7 @@
                                 @if (!string.IsNullOrEmpty(fb.OwnerReply))
                                 {
                                     <div class="owner-reply-box">
-                                        <div class="fw-bold text-success fs-8 mb-1"><i class="fa-solid fa-reply me-1"></i> Phản hồi từ Chủ xe:</div>
+                                        <div class="fw-bold text-success fs-8 mb-1"><i class="fa-solid fa-reply me-1"></i> Phản hồi từ Chủ xe / Gara:</div>
                                         <div class="text-dark fs-7">@fb.OwnerReply</div>
                                     </div>
                                 }
@@ -386,7 +408,14 @@
                 {
                     <div class="text-center py-4 text-muted fs-7">
                         <i class="fa-regular fa-comment-dots fs-3 d-block mb-2 text-secondary"></i>
-                        Chưa có đánh giá nào cho xe này. Hãy là khách hàng đầu tiên trải nghiệm!
+                        @if (Model.SelectedRatingFilter.HasValue && Model.SelectedRatingFilter.Value > 0)
+                        {
+                            <span>Không tìm thấy đánh giá nào có mức @Model.SelectedRatingFilter.Value sao. <a href="@Url.Action("Details", "Car", new { id = Model.Car.CarId, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd") })#reviewsSection" class="text-primary-custom text-decoration-none">Xem tất cả đánh giá</a>.</span>
+                        }
+                        else
+                        {
+                            <span>Chưa có đánh giá nào cho xe này. Hãy là khách hàng đầu tiên trải nghiệm!</span>
+                        }
                     </div>
                 }
             </div>
