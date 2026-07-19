@@ -1,0 +1,277 @@
+@model IEnumerable<CarRetalWebsite.Models.Car>
+@{
+    ViewData["Title"] = "Danh sách xe sẵn có";
+    var carTypes = ViewBag.CarTypes as IEnumerable<CarRetalWebsite.Models.CarType>;
+}
+
+<style>
+    .page-header-custom {
+        background-color: #0f172a;
+        color: #ffffff;
+        padding: 50px 0;
+        border-radius: 0 0 30px 30px;
+        margin-bottom: 40px;
+    }
+    
+    .search-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: var(--shadow-md);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        padding: 25px;
+        margin-top: -80px;
+        margin-bottom: 40px;
+        position: relative;
+        z-index: 5;
+    }
+
+    .car-grid-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition-smooth);
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .car-grid-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-light);
+    }
+
+    .car-img-container {
+        position: relative;
+        height: 200px;
+        background-color: #f1f5f9;
+        overflow: hidden;
+    }
+
+    .car-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: var(--transition-smooth);
+    }
+
+    .car-grid-card:hover .car-img {
+        transform: scale(1.06);
+    }
+
+    .type-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background-color: rgba(2, 132, 199, 0.9);
+        color: #ffffff;
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        backdrop-filter: blur(4px);
+    }
+
+    .car-details-body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .car-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 5px;
+    }
+
+    .brand-text {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    .spec-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .spec-item {
+        background-color: var(--bg-light);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 550;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .price-section {
+        margin-top: auto;
+        padding-top: 15px;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .price-value {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--primary-color);
+    }
+
+    .price-unit {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+</style>
+
+<div class="page-header-custom text-center">
+    <div class="container">
+        <h1 class="display-5 fw-bold" style="letter-spacing: -1px;">Đặt Xe Tự Lái</h1>
+        <p class="lead mb-4 text-white-50">Tìm kiếm và chọn chiếc xe hoàn hảo cho hành trình của bạn</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Search Bar -->
+    <div class="search-card">
+        <form method="GET" action="/Booking/Index">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label fw-bold text-dark"><i class="fa-solid fa-magnifying-glass me-2 text-primary"></i>Tên xe / Hãng xe</label>
+                    <input type="text" class="form-control py-2" name="keyword" value="@ViewBag.Keyword" placeholder="Nhập tên hoặc hãng xe..." />
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label fw-bold text-dark"><i class="fa-solid fa-car me-2 text-primary"></i>Phân loại xe</label>
+                    <select class="form-select py-2" name="typeId">
+                        <option value="">Tất cả phân loại</option>
+                        @if (carTypes != null)
+                        {
+                            foreach (var type in carTypes)
+                            {
+                                if (ViewBag.TypeId == type.TypeId)
+                                {
+                                    <option value="@type.TypeId" selected>@type.TypeName</option>
+                                }
+                                else
+                                {
+                                    <option value="@type.TypeId">@type.TypeName</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label fw-bold text-dark"><i class="fa-solid fa-money-bill-wave me-2 text-primary"></i>Giá thuê tối đa / ngày</label>
+                    <input type="number" class="form-control py-2" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="Nhập giá tối đa..." />
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <button type="submit" class="btn-primary-custom w-100 py-2 border-0">
+                        <i class="fa-solid fa-filter me-2"></i>Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Car Grid -->
+    <div class="mb-5">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i>@TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+                <i class="fa-solid fa-circle-exclamation me-2"></i>@TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <h2 class="h3 fw-bold text-dark mb-4"><i class="fa-solid fa-list-check me-2 text-primary"></i>Danh sách xe sẵn sàng phục vụ</h2>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 rounded-4 bg-white border border-dashed">
+                <i class="fa-solid fa-car-tunnel display-1 text-muted mb-3"></i>
+                <p class="lead text-muted">Hiện tại không tìm thấy xe nào có sẵn phù hợp với điều kiện tìm kiếm.</p>
+                <a href="/Booking/Index" class="btn-outline-custom mt-2">Xóa bộ lọc</a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var car in Model)
+                {
+                    var imageUrl = car.CarImages?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                                   ?? car.CarImages?.FirstOrDefault()?.ImageUrl 
+                                   ?? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80";
+
+                    var transmission = "Số tự động";
+                    if (!string.IsNullOrEmpty(car.SpecsJson) && car.SpecsJson.Contains("Số sàn"))
+                    {
+                        transmission = "Số sàn";
+                    }
+
+                    var fuel = "Xăng";
+                    if (!string.IsNullOrEmpty(car.SpecsJson) && (car.SpecsJson.Contains("Dầu") || car.SpecsJson.Contains("Diesel")))
+                    {
+                        fuel = "Dầu";
+                    }
+
+                    <div class="col-lg-4 col-md-6">
+                        <div class="car-grid-card">
+                            <div class="car-img-container">
+                                <img src="@imageUrl" alt="@car.CarName" class="car-img" />
+                                <span class="type-badge">@car.Type?.TypeName</span>
+                            </div>
+                            <div class="car-details-body">
+                                <h3 class="car-title">@car.CarName</h3>
+                                <div class="brand-text">Hãng: <strong class="text-dark">@car.Brand</strong></div>
+                                
+                                <div class="spec-row">
+                                    <div class="spec-item">
+                                        <i class="fa-solid fa-gears text-primary"></i> @transmission
+                                    </div>
+                                    <div class="spec-item">
+                                        <i class="fa-solid fa-gas-pump text-primary"></i> @fuel
+                                    </div>
+                                    <div class="spec-item">
+                                        <i class="fa-solid fa-passport text-primary"></i> @car.LicensePlate
+                                    </div>
+                                </div>
+                                
+                                <div class="price-section">
+                                    <div>
+                                        <span class="price-value">@car.PricePerDay.ToString("N0") đ</span>
+                                        <span class="price-unit">/ ngày</span>
+                                    </div>
+                                    <a href="/Booking/Book?carId=@car.CarId" class="btn-primary-custom border-0 py-2 px-3 fs-6">
+                                        Chọn Xe <i class="fa-solid fa-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
