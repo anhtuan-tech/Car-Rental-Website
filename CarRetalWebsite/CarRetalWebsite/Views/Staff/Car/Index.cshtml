@@ -14,8 +14,10 @@
         font-size: 2rem;
         font-weight: 800;
         color: #0f172a;
-        margin-bottom: 20px;
+        margin-bottom: 0;
     }
+
+    .header-actions a { margin-left: 8px; }
 
     /* FILTER CARD */
     .filter-card {
@@ -107,9 +109,20 @@
         background: #e2e8f0;
         color: #475569;
     }
+
+    .action-group .btn { margin-right: 6px; }
 </style>
 
-<h2 class="page-title">🚗 Manage Cars</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="page-title">🚗 Manage Cars <span class="text-muted" style="font-weight:600; font-size:0.9rem;">(@(Model?.Count() ?? 0))</span></h2>
+        <p class="text-muted mb-0">Xem, tìm kiếm và cập nhật trạng thái xe.</p>
+    </div>
+    <div class="header-actions d-flex align-items-center">
+        <a href="@Url.Action("Index", "StaffBooking")" class="btn btn-outline-primary">Quản lý Booking</a>
+        <a href="@Url.Action("Index", "StaffCar")" class="btn btn-primary">Quản lý Xe</a>
+    </div>
+</div>
 
 <!-- FILTER -->
 <div class="filter-card">
@@ -120,7 +133,7 @@
                    name="search"
                    value="@ViewBag.Search"
                    class="form-control"
-                   placeholder="Search car or brand..." />
+                   placeholder="Search car name, brand or license..." />
         </div>
 
         <div class="col-md-4">
@@ -158,33 +171,48 @@
         </thead>
 
         <tbody>
-            @foreach (var car in Model)
+            @if (Model != null && Model.Any())
+            {
+                foreach (var car in Model)
+                {
+                    <tr>
+                        <td>@car.CarId</td>
+                        <td>@car.CarName</td>
+                        <td>@car.Brand</td>
+                        <td>@car.LicensePlate</td>
+
+                        <td>
+                            @(car.Owner?.Profile?.FullName ?? car.Owner?.Email ?? "N/A")
+                        </td>
+
+                        <td>
+                            @{ var statusClass = (car.Status ?? "").ToLower().Replace(" ", "-"); }
+                            <span class="status status-@statusClass">
+                                @car.Status
+                            </span>
+                        </td>
+
+                        <td>@car.PricePerDay.ToString("N0")</td>
+
+                        <td>
+                            <div class="action-group d-flex align-items-center">
+                                <a asp-action="Details"
+                                   asp-route-id="@car.CarId"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Details
+                                </a>
+                                <a href="@Url.Action("Index", "StaffBooking", new { search = car.LicensePlate })" class="btn btn-sm btn-outline-secondary">
+                                    Bookings
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            else
             {
                 <tr>
-                    <td>@car.CarId</td>
-                    <td>@car.CarName</td>
-                    <td>@car.Brand</td>
-                    <td>@car.LicensePlate</td>
-
-                    <td>
-                        @(car.Owner?.Profile?.FullName ?? car.Owner?.Email)
-                    </td>
-
-                    <td>
-                        <span class="status status-@car.Status.ToLower()">
-                            @car.Status
-                        </span>
-                    </td>
-
-                    <td>@car.PricePerDay.ToString("N0")</td>
-
-                    <td>
-                        <a asp-action="Details"
-                           asp-route-id="@car.CarId"
-                           class="btn btn-sm btn-outline-primary">
-                            Details
-                        </a>
-                    </td>
+                    <td colspan="8" class="text-center py-4 text-muted">Không có dữ liệu.</td>
                 </tr>
             }
         </tbody>

@@ -22,20 +22,25 @@ namespace CarRetalWebsite.Controllers
 
             var query = _context.Bookings
                 .Include(b => b.Car)
+                    .ThenInclude(c => c.CarImages)
+                .Include(b => b.Car)
+                    .ThenInclude(c => c.Owner)
+                        .ThenInclude(o => o.Profile)
                 .Include(b => b.Customer)
                     .ThenInclude(u => u.Profile)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
             {
-                search = search.ToLower();
+                var s = search.ToLower();
 
                 query = query.Where(b =>
-                    b.BookingId.ToString().Contains(search) ||
-                    b.Car.CarName.ToLower().Contains(search) ||
-                    b.Car.LicensePlate.ToLower().Contains(search) ||
-                    (b.Customer.Profile != null &&
-                     b.Customer.Profile.FullName.ToLower().Contains(search)));
+                    b.BookingId.ToString().Contains(s) ||
+                    (b.Car != null && ((b.Car.CarName ?? "").ToLower().Contains(s))) ||
+                    (b.Car != null && ((b.Car.LicensePlate ?? "").ToLower().Contains(s))) ||
+                    (b.Customer != null && b.Customer.Profile != null && ((b.Customer.Profile.FullName ?? "").ToLower().Contains(s))) ||
+                    (b.Customer != null && ((b.Customer.Email ?? "").ToLower().Contains(s)))
+                );
             }
 
             if (!string.IsNullOrEmpty(status))
@@ -54,8 +59,15 @@ namespace CarRetalWebsite.Controllers
         {
             var booking = await _context.Bookings
                 .Include(b => b.Car)
+                    .ThenInclude(c => c.CarImages)
+                .Include(b => b.Car)
+                    .ThenInclude(c => c.Owner)
+                        .ThenInclude(o => o.Profile)
                 .Include(b => b.Customer)
                     .ThenInclude(u => u.Profile)
+                .Include(b => b.Payments)
+                .Include(b => b.BookingHistories)
+                    .ThenInclude(h => h.ChangedByNavigation)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
             if (booking == null)
@@ -66,14 +78,32 @@ namespace CarRetalWebsite.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(int id, string newStatus)
+        public async Task<IActionResult> UpdateStatus(int id, string newStatus, string? note)
         {
             var booking = await _context.Bookings.FindAsync(id);
 
             if (booking == null)
                 return NotFound();
 
+            var oldStatus = booking.Status;
             booking.Status = newStatus;
+
+            // Create booking history
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+            var user = !string.IsNullOrEmpty(email) ? await _context.Users.FirstOrDefaultAsync(u => u.Email == email) : null;
+            var changedBy = user?.UserId ?? 0;
+
+            var history = new BookingHistory
+            {
+                BookingId = id,
+                ChangedBy = changedBy,
+                OldStatus = oldStatus,
+                NewStatus = newStatus,
+                Note = note,
+                ChangedAt = DateTime.Now
+            };
+
+            _context.BookingHistories.Add(history);
 
             await _context.SaveChangesAsync();
 

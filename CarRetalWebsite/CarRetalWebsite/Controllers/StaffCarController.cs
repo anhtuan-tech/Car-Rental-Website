@@ -24,16 +24,17 @@ namespace CarRetalWebsite.Controllers
                 .Include(c => c.Owner)
                     .ThenInclude(o => o.Profile)
                 .Include(c => c.Type)
+                .Include(c => c.CarImages)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
             {
-                search = search.ToLower();
+                var s = search.ToLower();
 
                 query = query.Where(c =>
-                    c.CarName.ToLower().Contains(search) ||
-                    c.Brand.ToLower().Contains(search) ||
-                    c.LicensePlate.ToLower().Contains(search));
+                    ((c.CarName ?? "").ToLower().Contains(s)) ||
+                    ((c.Brand ?? "").ToLower().Contains(s)) ||
+                    ((c.LicensePlate ?? "").ToLower().Contains(s)));
             }
 
             if (!string.IsNullOrEmpty(status))
