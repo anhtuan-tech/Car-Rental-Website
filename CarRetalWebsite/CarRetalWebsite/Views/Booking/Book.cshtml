@@ -1,0 +1,286 @@
+@model CarRetalWebsite.Models.Car
+@{
+    ViewData["Title"] = "Đặt xe " + Model.CarName;
+    var imageUrl = Model.CarImages?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                   ?? Model.CarImages?.FirstOrDefault()?.ImageUrl 
+                   ?? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80";
+
+    var transmission = "Số tự động";
+    if (!string.IsNullOrEmpty(Model.SpecsJson) && Model.SpecsJson.Contains("Số sàn"))
+    {
+        transmission = "Số sàn";
+    }
+
+    var fuel = "Xăng";
+    if (!string.IsNullOrEmpty(Model.SpecsJson) && (Model.SpecsJson.Contains("Dầu") || Model.SpecsJson.Contains("Diesel")))
+    {
+        fuel = "Dầu";
+    }
+}
+
+<style>
+    .book-card {
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        overflow: hidden;
+        margin-bottom: 50px;
+    }
+
+    .car-info-panel {
+        background-color: var(--bg-light);
+        padding: 30px;
+        border-right: 1px solid rgba(226, 232, 240, 0.8);
+        height: 100%;
+    }
+
+    .booking-form-panel {
+        padding: 35px;
+    }
+
+    .car-details-img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 25px;
+    }
+
+    .spec-table {
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    .spec-table td {
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.95rem;
+    }
+
+    .spec-table td.label-cell {
+        color: var(--text-muted);
+        font-weight: 550;
+    }
+
+    .spec-table td.value-cell {
+        text-align: right;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .price-badge-large {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+        padding: 15px;
+        border-radius: 16px;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .calc-card {
+        background-color: #f8fafc;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px dashed var(--primary-color);
+        margin-top: 25px;
+    }
+
+    .calc-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .calc-row.total-row {
+        border-top: 1px solid #e2e8f0;
+        padding-top: 10px;
+        margin-top: 10px;
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: var(--text-dark);
+    }
+</style>
+
+<div class="container my-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/Booking/Index" class="text-decoration-none">Đặt xe</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Đặt xe @Model.CarName</li>
+        </ol>
+    </nav>
+
+    <div class="book-card">
+        <div class="row g-0">
+            <!-- Left Panel: Car Information -->
+            <div class="col-lg-6">
+                <div class="car-info-panel">
+                    <img src="@imageUrl" alt="@Model.CarName" class="car-details-img" />
+                    
+                    <h2 class="h3 fw-bold text-dark mb-2">@Model.CarName</h2>
+                    <p class="text-muted">Hãng xe: <strong>@Model.Brand</strong> | Model: <strong>@Model.Model</strong></p>
+
+                    <div class="price-badge-large">
+                        <span class="fs-6 text-muted block mb-1">Đơn giá thuê</span>
+                        <h3 class="fw-extrabold m-0">@Model.PricePerDay.ToString("N0") <span class="fs-6">đ/ngày</span></h3>
+                    </div>
+
+                    <h4 class="h5 fw-bold text-dark border-bottom pb-2 mb-3">Thông số kỹ thuật</h4>
+                    <table class="spec-table">
+                        <tr>
+                            <td class="label-cell"><i class="fa-solid fa-gears me-2 text-primary"></i>Hộp số</td>
+                            <td class="value-cell">@transmission</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell"><i class="fa-solid fa-gas-pump me-2 text-primary"></i>Nhiên liệu</td>
+                            <td class="value-cell">@fuel</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell"><i class="fa-solid fa-passport me-2 text-primary"></i>Biển số xe</td>
+                            <td class="value-cell">@Model.LicensePlate</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell"><i class="fa-solid fa-car me-2 text-primary"></i>Loại xe</td>
+                            <td class="value-cell">@Model.Type?.TypeName</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right Panel: Booking Form -->
+            <div class="col-lg-6">
+                <div class="booking-form-panel">
+                    <h3 class="fw-bold text-dark mb-4"><i class="fa-regular fa-calendar-check me-2 text-primary"></i>Thông tin đặt xe</h3>
+                    
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger rounded-4 shadow-sm mb-4">
+                            <ul class="m-0 ps-3">
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    foreach (var error in modelState.Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <form method="POST" action="/Booking/ConfirmBook">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="carId" value="@Model.CarId" />
+
+                        <!-- Start Date Input -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="fa-regular fa-calendar-plus text-primary me-2"></i>Ngày nhận xe</label>
+                            <input type="date" id="StartDate" name="startDate" class="form-control py-2.5 rounded-3" 
+                                   required value="@DateTime.Today.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        </div>
+
+                        <!-- End Date Input -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold"><i class="fa-regular fa-calendar-minus text-primary me-2"></i>Ngày trả xe</label>
+                            <input type="date" id="EndDate" name="endDate" class="form-control py-2.5 rounded-3" 
+                                   required value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        </div>
+
+                        <!-- Calculations Summary Panel -->
+                        <div class="calc-card">
+                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fa-solid fa-receipt me-2 text-primary"></i>Chi tiết tạm tính</h5>
+                            <div class="calc-row">
+                                <span class="text-muted">Số ngày thuê:</span>
+                                <span id="calc-days" class="fw-bold">1 ngày</span>
+                            </div>
+                            <div class="calc-row">
+                                <span class="text-muted">Đơn giá:</span>
+                                <span class="fw-bold">@Model.PricePerDay.ToString("N0") đ/ngày</span>
+                            </div>
+                            <div class="calc-row">
+                                <span class="text-muted">Phí thuê xe (Subtotal):</span>
+                                <span id="calc-subtotal" class="fw-bold text-dark">0 đ</span>
+                            </div>
+                            <div class="calc-row">
+                                <span class="text-muted" title="10% platform fee">Phí nền tảng (10%):</span>
+                                <span id="calc-commission" class="fw-bold text-muted">0 đ</span>
+                            </div>
+                            <div class="calc-row total-row">
+                                <span>Tổng thanh toán:</span>
+                                <span id="calc-total">0 đ</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn-primary-custom w-100 py-3 border-0 fs-6">
+                                <i class="fa-solid fa-check-double me-2"></i> Xác nhận đặt xe
+                            </button>
+                            <a href="/Booking/Index" class="btn btn-light w-100 py-2.5 mt-2 rounded-3 text-muted fw-bold">
+                                Quay lại danh sách xe
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const startDateInput = document.getElementById("StartDate");
+        const endDateInput = document.getElementById("EndDate");
+        const pricePerDay = @((long)Model.PricePerDay);
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+                .format(amount)
+                .replace('₫', 'đ');
+        }
+
+        function calculateRental() {
+            const startVal = startDateInput.value;
+            const endVal = endDateInput.value;
+
+            if (startVal && endVal) {
+                const startDate = new Date(startVal);
+                const endDate = new Date(endVal);
+
+                startDate.setHours(0,0,0,0);
+                endDate.setHours(0,0,0,0);
+
+                if (endDate >= startDate) {
+                    const timeDiff = endDate.getTime() - startDate.getTime();
+                    const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+
+                    const subtotal = totalDays * pricePerDay;
+                    const commission = subtotal * 0.10;
+                    const ownerPayout = subtotal - commission;
+
+                    document.getElementById("calc-days").textContent = totalDays + " ngày";
+                    document.getElementById("calc-subtotal").textContent = formatMoney(subtotal);
+                    document.getElementById("calc-commission").textContent = formatMoney(commission);
+                    document.getElementById("calc-total").textContent = formatMoney(subtotal);
+                } else {
+                    document.getElementById("calc-days").textContent = "0 ngày";
+                    document.getElementById("calc-subtotal").textContent = "0 đ";
+                    document.getElementById("calc-commission").textContent = "0 đ";
+                    document.getElementById("calc-total").textContent = "0 đ";
+                }
+            }
+        }
+
+        startDateInput.addEventListener("change", function () {
+            endDateInput.min = startDateInput.value;
+            if (new Date(endDateInput.value) < new Date(startDateInput.value)) {
+                endDateInput.value = startDateInput.value;
+            }
+            calculateRental();
+        });
+
+        endDateInput.addEventListener("change", calculateRental);
+        calculateRental();
+    });
+</script>

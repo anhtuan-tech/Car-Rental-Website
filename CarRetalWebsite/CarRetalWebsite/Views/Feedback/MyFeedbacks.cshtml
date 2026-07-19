@@ -1,0 +1,161 @@
+@model IEnumerable<CarRetalWebsite.Models.Feedback>
+@{
+    ViewData["Title"] = "Đánh giá của tôi";
+}
+
+<style>
+    .feedback-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: var(--shadow-sm);
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: var(--transition-smooth);
+    }
+
+    .feedback-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-light);
+    }
+
+    .star-rating {
+        color: #f59e0b; /* Amber star color */
+        font-size: 1.1rem;
+    }
+
+    .reply-box {
+        background-color: #f8fafc;
+        border-left: 4px solid var(--primary-color);
+        padding: 15px;
+        border-radius: 0 10px 10px 0;
+        margin-top: 15px;
+        font-size: 0.95rem;
+    }
+
+    .car-info-badge {
+        font-size: 0.85rem;
+        background-color: var(--bg-light);
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-weight: 550;
+    }
+</style>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h2 fw-bold text-dark"><i class="fa-solid fa-comments me-2 text-primary"></i>Đánh giá của tôi</h1>
+            <p class="text-muted">Xem và quản lý các đánh giá dịch vụ xe bạn đã gửi</p>
+        </div>
+        <div>
+            <a href="/Booking/MyBookings" class="btn btn-outline-secondary py-2.5 px-4 rounded-3 fw-bold">
+                <i class="fa-solid fa-clock-history me-2"></i>Xem lịch sử chuyến đi
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div>
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 bg-white rounded-4 border">
+                <i class="fa-regular fa-comment-dots display-2 text-muted mb-3"></i>
+                <p class="lead text-muted">Bạn chưa viết phản hồi hoặc đánh giá nào.</p>
+                <p class="text-muted small">Hãy truy cập lịch sử đặt xe và viết đánh giá cho các đơn hàng ở trạng thái <strong>Completed</strong>.</p>
+            </div>
+        }
+        else
+        {
+            foreach (var feedback in Model)
+            {
+                <div class="feedback-card">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap g-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <span class="car-info-badge">
+                                    <i class="fa-solid fa-car text-primary me-1"></i>@feedback.Booking.Car.CarName
+                                </span>
+                                <span class="text-muted small">Mã đơn: #@feedback.BookingId</span>
+                            </div>
+                            
+                            <!-- Star Rating -->
+                            <div class="star-rating mb-2">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= feedback.Rating)
+                                    {
+                                        <i class="fa-solid fa-star"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-regular fa-star"></i>
+                                    }
+                                }
+                                <span class="text-dark fw-bold ms-2" style="font-size: 0.9rem;">@feedback.Rating / 5 sao</span>
+                            </div>
+
+                            <p class="text-dark mb-1 font-monospace-custom" style="white-space: pre-wrap;">@feedback.Comment</p>
+                            <div class="text-muted small">
+                                <i class="fa-regular fa-clock me-1"></i>Viết ngày: @feedback.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                @if (feedback.UpdatedAt != feedback.CreatedAt)
+                                {
+                                    <span class="ms-2 font-italic">(Đã chỉnh sửa lúc: @feedback.UpdatedAt.ToString("dd/MM/yyyy HH:mm"))</span>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Actions (Edit/Delete) -->
+                        <div class="d-flex gap-2">
+                            <a href="/Feedback/FeedbackDetails?id=@feedback.FeedbackId" class="btn btn-light btn-sm py-2 px-3 rounded-3" title="Xem chi tiết">
+                                <i class="fa-solid fa-eye me-1"></i>Chi tiết
+                            </a>
+                            <a href="/Feedback/EditFeedback?id=@feedback.FeedbackId" class="btn btn-outline-primary btn-sm py-2 px-3 rounded-3">
+                                <i class="fa-solid fa-pen-to-square me-1"></i>Sửa
+                            </a>
+                            <form method="POST" action="/Feedback/DeleteFeedback" onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này không?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@feedback.FeedbackId" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm py-2 px-3 rounded-3">
+                                    <i class="fa-solid fa-trash-can me-1"></i>Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Owner reply if exists -->
+                    @if (!string.IsNullOrEmpty(feedback.OwnerReply))
+                    {
+                        <div class="reply-box">
+                            <div class="fw-bold text-dark mb-1">
+                                <i class="fa-solid fa-reply fa-flip-horizontal me-2 text-primary"></i>Phản hồi của chủ xe:
+                            </div>
+                            <p class="text-muted mb-0">@feedback.OwnerReply</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mt-3 small text-white-50 text-bg-light p-2 rounded text-center" style="font-style: italic; color: #94a3b8 !important;">
+                            Chưa có phản hồi từ chủ xe
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
