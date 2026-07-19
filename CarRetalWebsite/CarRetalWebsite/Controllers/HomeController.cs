@@ -46,5 +46,30 @@ namespace CarRetalWebsite.Controllers
         {
             return View();
         }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [Route("Home/Error")]
+        public IActionResult Error(int? statusCode = null)
+        {
+            if (statusCode == 404)
+            {
+                ViewData["ErrorCode"] = 404;
+                ViewData["ErrorTitle"] = "Không tìm thấy trang";
+                ViewData["ErrorMessage"] = "Đường dẫn bạn truy cập không tồn tại hoặc đã bị di chuyển.";
+                return View("Error");
+            }
+            else if (statusCode == 403)
+            {
+                ViewData["ErrorCode"] = 403;
+                ViewData["ErrorTitle"] = "Truy cập bị từ chối";
+                ViewData["ErrorMessage"] = "Bạn không có quyền truy cập vào trang này.";
+                return View("Error");
+            }
+
+            ViewData["ErrorCode"] = statusCode ?? 500;
+            ViewData["ErrorTitle"] = "Đã xảy ra lỗi hệ thống";
+            ViewData["ErrorMessage"] = "Chúng tôi xin lỗi vì sự bất tiện này. Vui lòng quay lại sau.";
+            return View("Error");
+        }
     }
 }
