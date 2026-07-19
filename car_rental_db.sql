@@ -1,3 +1,6 @@
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+
 CREATE TABLE Role (
     role_id INT IDENTITY(1,1) NOT NULL,
     role_name NVARCHAR(50) NOT NULL,
@@ -6,7 +9,7 @@ CREATE TABLE Role (
     CONSTRAINT UC_RoleName UNIQUE (role_name)
 );
 
-CREATE TABLE User (
+CREATE TABLE [User] (
     user_id INT IDENTITY(1,1) NOT NULL,
     role_id INT NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -33,7 +36,7 @@ CREATE TABLE Profile (
     
     CONSTRAINT PK_Profile PRIMARY KEY (profile_id),
     CONSTRAINT UC_ProfileUser UNIQUE (user_id),
-    CONSTRAINT FK_Profile_User FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+    CONSTRAINT FK_Profile_User FOREIGN KEY (user_id) REFERENCES [User](user_id) ON DELETE CASCADE
 );
 
 CREATE UNIQUE NONCLUSTERED INDEX UC_DriverLicense 
@@ -69,8 +72,8 @@ CREATE TABLE Car (
     
     CONSTRAINT PK_Car PRIMARY KEY (car_id),
     CONSTRAINT UC_LicensePlate UNIQUE (license_plate),
-    CONSTRAINT FK_Cars_Owner FOREIGN KEY (owner_id) REFERENCES Users(user_id),
-    CONSTRAINT FK_Cars_CarType FOREIGN KEY (type_id) REFERENCES CarTypes(type_id)
+    CONSTRAINT FK_Cars_Owner FOREIGN KEY (owner_id) REFERENCES [User](user_id),
+    CONSTRAINT FK_Cars_CarType FOREIGN KEY (type_id) REFERENCES CarType(type_id)
 );
 
 CREATE TABLE CarImage (
@@ -80,7 +83,7 @@ CREATE TABLE CarImage (
     is_primary BIT NOT NULL DEFAULT 0,
     
     CONSTRAINT PK_CarImage PRIMARY KEY (image_id),
-    CONSTRAINT FK_CarImage_Car FOREIGN KEY (car_id) REFERENCES Cars(car_id) ON DELETE CASCADE
+    CONSTRAINT FK_CarImage_Car FOREIGN KEY (car_id) REFERENCES Car(car_id) ON DELETE CASCADE
 );
 
 CREATE TABLE Booking (
@@ -97,8 +100,8 @@ CREATE TABLE Booking (
     created_at DATETIME NOT NULL DEFAULT GETDATE(),
     
     CONSTRAINT PK_Booking PRIMARY KEY (booking_id),
-    CONSTRAINT FK_Booking_Customer FOREIGN KEY (customer_id) REFERENCES User(user_id),
-    CONSTRAINT FK_Booking_Car FOREIGN KEY (car_id) REFERENCES Cars(car_id)
+    CONSTRAINT FK_Booking_Customer FOREIGN KEY (customer_id) REFERENCES [User](user_id),
+    CONSTRAINT FK_Booking_Car FOREIGN KEY (car_id) REFERENCES Car(car_id)
 );
 
 CREATE TABLE BookingHistory (
@@ -112,7 +115,7 @@ CREATE TABLE BookingHistory (
     
     CONSTRAINT PK_BookingHistory PRIMARY KEY (history_id),
     CONSTRAINT FK_History_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id) ON DELETE CASCADE,
-    CONSTRAINT FK_History_User FOREIGN KEY (changed_by) REFERENCES User(user_id)
+    CONSTRAINT FK_History_User FOREIGN KEY (changed_by) REFERENCES [User](user_id)
 );
 
 CREATE TABLE Feedback (
@@ -128,7 +131,7 @@ CREATE TABLE Feedback (
     CONSTRAINT PK_Feedback PRIMARY KEY (feedback_id),
     CONSTRAINT UC_FeedbackBooking UNIQUE (booking_id), -- Một booking chỉ được đánh giá 1 lần duy nhất
     CONSTRAINT FK_Feedback_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id),
-    CONSTRAINT FK_Feedback_Customer FOREIGN KEY (customer_id) REFERENCES User(user_id)
+    CONSTRAINT FK_Feedback_Customer FOREIGN KEY (customer_id) REFERENCES [User](user_id)
 );
 
 CREATE TABLE Payment (

@@ -1,0 +1,415 @@
+@model CarRetalWebsite.Models.CarSearchViewModel
+@{
+    ViewData["Title"] = "Danh sách xe cho thuê";
+}
+
+<style>
+    .car-catalog-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0369a1 100%);
+        padding: 60px 0 80px 0;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .car-catalog-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: var(--bg-light, #f8fafc);
+        border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    }
+
+    .filter-sidebar {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e2e8f0;
+        padding: 24px;
+        position: sticky;
+        top: 90px;
+    }
+
+    .filter-header {
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: var(--text-dark, #0f172a);
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--primary-light, #e0f2fe);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .form-label-custom {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #475569;
+        margin-bottom: 8px;
+    }
+
+    .form-control-custom, .form-select-custom {
+        border-radius: 12px;
+        border: 1.5px solid #cbd5e1;
+        padding: 10px 14px;
+        font-size: 0.92rem;
+        font-weight: 500;
+        transition: all 0.25s ease;
+    }
+
+    .form-control-custom:focus, .form-select-custom:focus {
+        border-color: var(--primary-color, #0284c7);
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        outline: none;
+    }
+
+    .sorting-toolbar {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 16px 24px;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .active-filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background-color: var(--primary-light, #e0f2fe);
+        color: var(--primary-color, #0284c7);
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+    }
+
+    .active-filter-chip a {
+        color: var(--primary-color, #0284c7);
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .pagination-custom .page-link {
+        border-radius: 12px;
+        margin: 0 4px;
+        font-weight: 600;
+        color: #475569;
+        border: 1.5px solid #e2e8f0;
+        padding: 8px 16px;
+        transition: all 0.2s ease;
+    }
+
+    .pagination-custom .page-item.active .page-link {
+        background-color: var(--primary-color, #0284c7);
+        border-color: var(--primary-color, #0284c7);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+
+    .pagination-custom .page-link:hover:not(.active) {
+        background-color: var(--primary-light, #e0f2fe);
+        color: var(--primary-color, #0284c7);
+    }
+
+    .empty-state-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 60px 20px;
+        text-align: center;
+        border: 1px dashed #cbd5e1;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.03);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #94a3b8;
+        margin-bottom: 20px;
+    }
+</style>
+
+<!-- Hero Banner -->
+<section class="car-catalog-hero">
+    <div class="container text-center">
+        <h1 class="fw-bold display-5 mb-3" data-aos="fade-down">Khám Phá Danh Sách Xe Cho Thuê</h1>
+        <p class="lead opacity-90 text-light max-w-600 mx-auto" data-aos="fade-up" data-aos-delay="100">
+            Tìm kiếm mẫu xe ưng ý nhất với mức giá tối ưu và dịch vụ chất lượng cao tại Gara của chúng tôi.
+        </p>
+    </div>
+</section>
+
+<!-- Main Catalog Container -->
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Sidebar Filter (UC-10) -->
+        <div class="col-lg-3">
+            <div class="filter-sidebar" data-aos="fade-right">
+                <div class="filter-header">
+                    <span><i class="fa-solid fa-sliders text-primary-custom me-2"></i> Bộ Lọc Tìm Kiếm</span>
+                    <a href="/Car" class="btn btn-sm btn-link text-decoration-none text-muted p-0 fs-7">Làm mới</a>
+                </div>
+
+                <form action="/Car" method="GET" id="searchFilterForm" onsubmit="return validateSearchForm()">
+                    <!-- Hidden sort & page state -->
+                    <input type="hidden" name="sortBy" value="@Model.SortBy" />
+
+                    <!-- Keyword search -->
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-solid fa-magnifying-glass text-muted me-1"></i> Tên xe / Hãng xe</label>
+                        <input type="text" class="form-control form-control-custom" name="keyword" value="@Model.Keyword" placeholder="VD: Mazda CX5, Toyota..." />
+                    </div>
+
+                    <!-- Dates selection -->
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-regular fa-calendar-plus text-muted me-1"></i> Ngày nhận xe</label>
+                        <input type="date" class="form-control form-control-custom" id="startDateInput" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-regular fa-calendar-minus text-muted me-1"></i> Ngày trả xe</label>
+                        <input type="date" class="form-control form-control-custom" id="endDateInput" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <!-- Car Type filter -->
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-solid fa-car-side text-muted me-1"></i> Loại xe (Car Type)</label>
+                        <select class="form-select form-select-custom" name="typeId">
+                            <option value="">Tất cả loại xe</option>
+                            @foreach (var type in Model.CarTypes)
+                            {
+                                <option value="@type.TypeId" selected="@(Model.TypeId == type.TypeId ? "selected" : null)">@type.TypeName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Brand filter -->
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-solid fa-copyright text-muted me-1"></i> Hãng sản xuất</label>
+                        <select class="form-select form-select-custom" name="brand">
+                            <option value="">Tất cả hãng</option>
+                            @foreach (var b in Model.Brands)
+                            {
+                                <option value="@b" selected="@(string.Equals(Model.Brand, b, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@b</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Transmission filter -->
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-solid fa-gears text-muted me-1"></i> Hộp số</label>
+                        <select class="form-select form-select-custom" name="transmission">
+                            <option value="">Tất cả hộp số</option>
+                            <option value="Số tự động" selected="@(Model.Transmission == "Số tự động" ? "selected" : null)">Số tự động</option>
+                            <option value="Số sàn" selected="@(Model.Transmission == "Số sàn" ? "selected" : null)">Số sàn</option>
+                        </select>
+                    </div>
+
+                    <!-- Fuel filter -->
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-solid fa-gas-pump text-muted me-1"></i> Nhiên liệu</label>
+                        <select class="form-select form-select-custom" name="fuel">
+                            <option value="">Tất cả loại nhiên liệu</option>
+                            <option value="Xăng" selected="@(Model.Fuel == "Xăng" ? "selected" : null)">Xăng</option>
+                            <option value="Dầu" selected="@(Model.Fuel == "Dầu" ? "selected" : null)">Dầu (Diesel)</option>
+                            <option value="Điện" selected="@(Model.Fuel == "Điện" ? "selected" : null)">Xe điện (EV)</option>
+                        </select>
+                    </div>
+
+                    <!-- Min Rating filter -->
+                    <div class="mb-3">
+                        <label class="form-label-custom"><i class="fa-solid fa-star text-warning me-1"></i> Đánh giá tối thiểu</label>
+                        <select class="form-select form-select-custom" name="minRating">
+                            <option value="">Tất cả đánh giá</option>
+                            <option value="5" selected="@(Model.MinRating == 5 ? "selected" : null)">5 Sao (Tuyệt hảo)</option>
+                            <option value="4" selected="@(Model.MinRating == 4 ? "selected" : null)">Từ 4 Sao trở lên</option>
+                            <option value="3" selected="@(Model.MinRating == 3 ? "selected" : null)">Từ 3 Sao trở lên</option>
+                        </select>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="mb-4">
+                        <label class="form-label-custom"><i class="fa-solid fa-tag text-muted me-1"></i> Mức giá / Ngày (VNĐ)</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" step="50000" min="0" class="form-control form-control-custom" id="minPriceInput" name="minPrice" placeholder="Từ" value="@(Model.MinPrice.HasValue ? Model.MinPrice.Value.ToString("0") : "")" />
+                            </div>
+                            <div class="col-6">
+                                <input type="number" step="50000" min="0" class="form-control form-control-custom" id="maxPriceInput" name="maxPrice" placeholder="Đến" value="@(Model.MaxPrice.HasValue ? Model.MaxPrice.Value.ToString("0") : "")" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary-custom w-100 py-2.5">
+                        <i class="fa-solid fa-filter me-2"></i> Áp Dụng Lọc
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Car List Content -->
+        <div class="col-lg-9">
+            <!-- Sorting & Active Filters Toolbar -->
+            <div class="sorting-toolbar" data-aos="fade-left">
+                <div>
+                    <span class="fw-bold text-dark me-2">Tìm thấy <span class="text-primary-custom">@Model.TotalItems</span> xe sẵn sàng</span>
+                    @if (!string.IsNullOrEmpty(Model.Keyword) || Model.TypeId.HasValue || !string.IsNullOrEmpty(Model.Brand) || !string.IsNullOrEmpty(Model.Transmission) || !string.IsNullOrEmpty(Model.Fuel) || Model.MinRating.HasValue || Model.MinPrice.HasValue || Model.MaxPrice.HasValue)
+                    {
+                        <div class="d-inline-flex flex-wrap gap-2 ms-2 mt-2 mt-sm-0">
+                            @if (!string.IsNullOrEmpty(Model.Keyword))
+                            {
+                                <span class="active-filter-chip">Từ khóa: @Model.Keyword</span>
+                            }
+                            @if (Model.TypeId.HasValue)
+                            {
+                                var typeName = Model.CarTypes.FirstOrDefault(t => t.TypeId == Model.TypeId.Value)?.TypeName ?? "Loại xe";
+                                <span class="active-filter-chip">Loại: @typeName</span>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Brand))
+                            {
+                                <span class="active-filter-chip">Hãng: @Model.Brand</span>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Transmission))
+                            {
+                                <span class="active-filter-chip">@Model.Transmission</span>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Fuel))
+                            {
+                                <span class="active-filter-chip">@Model.Fuel</span>
+                            }
+                            @if (Model.MinRating.HasValue)
+                            {
+                                <span class="active-filter-chip">≥ @Model.MinRating ★</span>
+                            }
+                            @if (Model.MinPrice.HasValue || Model.MaxPrice.HasValue)
+                            {
+                                <span class="active-filter-chip">Giá: @(Model.MinPrice.HasValue ? Model.MinPrice.Value.ToString("N0") : "0")đ - @(Model.MaxPrice.HasValue ? Model.MaxPrice.Value.ToString("N0") : "∞")đ</span>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <label class="form-label-custom mb-0 me-1">Sắp xếp:</label>
+                    <select class="form-select form-select-custom form-select-sm w-auto" id="sortSelect" onchange="changeSort(this.value)">
+                        <option value="newest" selected="@(Model.SortBy == "newest" ? "selected" : null)">Mới nhất</option>
+                        <option value="rating_desc" selected="@(Model.SortBy == "rating_desc" ? "selected" : null)">Đánh giá cao nhất</option>
+                        <option value="price_asc" selected="@(Model.SortBy == "price_asc" ? "selected" : null)">Giá: Thấp -> Cao</option>
+                        <option value="price_desc" selected="@(Model.SortBy == "price_desc" ? "selected" : null)">Giá: Cao -> Thấp</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Cars Grid -->
+            @if (Model.Cars != null && Model.Cars.Any())
+            {
+                ViewData["CarRatings"] = Model.CarRatings;
+                <div class="row g-4">
+                    @foreach (var car in Model.Cars)
+                    {
+                        <div class="col-md-6 col-xl-4" data-aos="fade-up">
+                            @await Html.PartialAsync("_CarCard", car, ViewData)
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="mt-5 d-flex justify-content-center">
+                        <ul class="pagination pagination-custom">
+                            @if (Model.Page > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", "Car", new { keyword = Model.Keyword, typeId = Model.TypeId, brand = Model.Brand, transmission = Model.Transmission, fuel = Model.Fuel, minRating = Model.MinRating, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, startDate = Model.StartDate?.ToString("yyyy-MM-dd"), endDate = Model.EndDate?.ToString("yyyy-MM-dd"), sortBy = Model.SortBy, page = Model.Page - 1 })">
+                                        <i class="fa-solid fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int p = 1; p <= Model.TotalPages; p++)
+                            {
+                                <li class="page-item @(p == Model.Page ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", "Car", new { keyword = Model.Keyword, typeId = Model.TypeId, brand = Model.Brand, transmission = Model.Transmission, fuel = Model.Fuel, minRating = Model.MinRating, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, startDate = Model.StartDate?.ToString("yyyy-MM-dd"), endDate = Model.EndDate?.ToString("yyyy-MM-dd"), sortBy = Model.SortBy, page = p })">@p</a>
+                                </li>
+                            }
+
+                            @if (Model.Page < Model.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", "Car", new { keyword = Model.Keyword, typeId = Model.TypeId, brand = Model.Brand, transmission = Model.Transmission, fuel = Model.Fuel, minRating = Model.MinRating, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, startDate = Model.StartDate?.ToString("yyyy-MM-dd"), endDate = Model.EndDate?.ToString("yyyy-MM-dd"), sortBy = Model.SortBy, page = Model.Page + 1 })">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <!-- Empty State -->
+                <div class="empty-state-card" data-aos="zoom-in">
+                    <div class="empty-state-icon">
+                        <i class="fa-solid fa-car-triangle"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-2">Rất tiếc, không tìm thấy chiếc xe phù hợp!</h4>
+                    <p class="text-muted mb-4">Hãy thử bỏ bớt điều kiện lọc hoặc đổi thông tin tìm kiếm ngày thuê xe khác.</p>
+                    <a href="/Car" class="btn-primary-custom px-4 py-2 d-inline-flex align-items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Xem Tất Cả Xe
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function changeSort(sortValue) {
+            const form = document.getElementById('searchFilterForm');
+            form.querySelector('input[name="sortBy"]').value = sortValue;
+            form.submit();
+        }
+
+        function validateSearchForm() {
+            const startInput = document.getElementById('startDateInput').value;
+            const endInput = document.getElementById('endDateInput').value;
+            const minPrice = parseFloat(document.getElementById('minPriceInput').value);
+            const maxPrice = parseFloat(document.getElementById('maxPriceInput').value);
+
+            if (startInput && endInput) {
+                const s = new Date(startInput);
+                const e = new Date(endInput);
+                if (e < s) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Khoảng thời gian không hợp lệ',
+                        text: 'Ngày trả xe phải bằng hoặc sau ngày nhận xe!',
+                        confirmButtonColor: '#0284c7'
+                    });
+                    return false;
+                }
+            }
+
+            if (!isNaN(minPrice) && !isNaN(maxPrice) && maxPrice < minPrice) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Khoảng giá không hợp lệ',
+                    text: 'Giá tối đa phải lớn hơn hoặc bằng giá tối thiểu!',
+                    confirmButtonColor: '#0284c7'
+                });
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+}
