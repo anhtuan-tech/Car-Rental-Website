@@ -74,7 +74,7 @@ namespace CarRetalWebsite.Controllers
                 .FirstOrDefaultAsync(u => u.Email == email || u.PhoneNumber == email);
 
             var hashedPassword = HashPasswordSha256(password);
-            if (user == null || user.Password != password)
+            if (user == null || user.Password != hashedPassword)
             {
                 TempData["LoginError"] = "Tài khoản hoặc mật khẩu không chính xác.";
                 return View();

@@ -41,6 +41,7 @@
     .status-active { background-color: #dcfce7; color: #15803d; }
     .status-completed { background-color: #ecfdf5; color: #059669; }
     .status-cancelled { background-color: #f1f5f9; color: #475569; }
+    .status-paid { background-color: #f3e8ff; color: #7e22ce; }
 
     .fee-box {
         background-color: var(--bg-light);
@@ -65,7 +66,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <h1 class="h2 fw-bold text-dark"><i class="fa-solid fa-list-check me-2 text-primary"></i>Lịch sử đặt xe</h1>
-            <p class="text-muted">Quản lý các chuyến đi và giao dịch của khách hàng <strong>Vũ Minh Khang</strong></p>
+            <p class="text-muted">Quản lý các chuyến đi và giao dịch của khách hàng <strong>@(User.Identity?.Name ?? "Khách hàng")</strong></p>
         </div>
         <div>
             <a href="/Car/Index" class="btn-primary-custom border-0 py-2.5 px-4">
@@ -114,6 +115,7 @@
                             <option value="">Tất cả trạng thái</option>
                             <option value="Pending" selected="@(ViewBag.Status == "Pending")">Chờ duyệt (Pending)</option>
                             <option value="Approved" selected="@(ViewBag.Status == "Approved")">Đã duyệt (Approved)</option>
+                            <option value="Paid" selected="@(ViewBag.Status == "Paid")">Đã thanh toán (Paid)</option>
                             <option value="Rejected" selected="@(ViewBag.Status == "Rejected")">Từ chối (Rejected)</option>
                             <option value="Active" selected="@(ViewBag.Status == "Active")">Đang thuê (Active)</option>
                             <option value="Completed" selected="@(ViewBag.Status == "Completed")">Hoàn thành (Completed)</option>
@@ -159,6 +161,10 @@
                     case "Approved":
                         statusClass = "status-approved";
                         statusText = "Đã duyệt";
+                        break;
+                    case "Paid":
+                        statusClass = "status-paid";
+                        statusText = "Đã thanh toán";
                         break;
                     case "Rejected":
                         statusClass = "status-rejected";
@@ -229,6 +235,20 @@
                                         <i class="fa-solid fa-ban me-1"></i>Hủy đặt xe
                                     </button>
                                 </form>
+                            }
+                            else if (booking.Status == "Approved")
+                            {
+                                <a href="/Booking/PayWithVnPay?bookingId=@booking.BookingId" class="btn btn-success btn-sm py-2 px-3 rounded-3 fw-bold w-100">
+                                    <i class="fa-solid fa-credit-card me-1"></i>Thanh toán VNPay
+                                </a>
+                            }
+                            else if (booking.Status == "Paid")
+                            {
+                                <div class="text-center">
+                                    <span class="badge bg-success py-2 px-3 rounded-3 w-100 fw-bold">
+                                        <i class="fa-solid fa-circle-check me-1"></i>Đã thanh toán
+                                    </span>
+                                </div>
                             }
                             else if (booking.Status == "Completed")
                             {

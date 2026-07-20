@@ -1,16 +1,32 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CarRetalWebsite.Models;
+using CarRetalWebsite.Services;
 
 namespace CarRetalWebsite.Controllers
 {
+    [Authorize]
     public class BookingController : Controller
     {
         private readonly CarRentalDbContext _context;
-        private const int CurrentCustomerId = 1; // Khách hàng Vũ Minh Khang cố định trong DB
+
+        private int CurrentCustomerId
+        {
+            get
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim, out int id))
+                {
+                    return id;
+                }
+                return 0;
+            }
+        }
 
         public BookingController(CarRentalDbContext context)
         {
@@ -162,7 +178,7 @@ namespace CarRetalWebsite.Controllers
                 ChangedBy = CurrentCustomerId,
                 OldStatus = null,
                 NewStatus = "Pending",
-                Note = "Khách hàng Vũ Minh Khang tạo đơn đặt xe.",
+                Note = $"Khách hàng {User.Identity?.Name ?? "Người dùng"} tạo đơn đặt xe.",
                 ChangedAt = DateTime.Now
             };
 
@@ -213,6 +229,159 @@ namespace CarRetalWebsite.Controllers
 
             TempData["SuccessMessage"] = "Đã hủy đơn đặt xe thành công.";
             return RedirectToAction("MyBookings");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PayWithVnPay(int bookingId)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Car)
+                .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.CustomerId == CurrentCustomerId);
+
+            if (booking == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy đơn đặt xe.";
+                return RedirectToAction("Index");
+            }
+
+            if (booking.Status != "Approved")
+            {
+                TempData["ErrorMessage"] = "Đơn đặt xe phải ở trạng thái Đã duyệt (Approved) mới có thể thanh toán.";
+                return RedirectToAction("Index");
+            }
+
+            // VNPay config
+            string vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+            string vnp_TmnCode = "35D4SA6W";
+            string vnp_HashSecret = "FJ1QVMTG3QFH25SSJBSOY9ESG5TUGSYW";
+            string vnp_ReturnUrl = Url.Action("VnPayCallback", "Booking", null, Request.Scheme) ?? "";
+
+            var vnpay = new VnPayLibrary();
+            
+            // Convert subtotalFee (decimal) to long (VNPay expects amount * 100)
+            long amount = (long)(booking.SubtotalFee * 100);
+
+            vnpay.AddRequestData("vnp_Version", "2.1.0");
+            vnpay.AddRequestData("vnp_Command", "pay");
+            vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
+            vnpay.AddRequestData("vnp_Amount", amount.ToString());
+            vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
+            vnpay.AddRequestData("vnp_CurrCode", "VND");
+            
+            string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+            vnpay.AddRequestData("vnp_IpAddr", ipAddress);
+            
+            vnpay.AddRequestData("vnp_Locale", "vn");
+            vnpay.AddRequestData("vnp_OrderInfo", $"Thanh toan don dat xe #{booking.BookingId}");
+            vnpay.AddRequestData("vnp_OrderType", "other");
+            vnpay.AddRequestData("vnp_ReturnUrl", vnp_ReturnUrl);
+            
+            string txnRef = $"{booking.BookingId}_{DateTime.Now.Ticks}";
+            vnpay.AddRequestData("vnp_TxnRef", txnRef);
+
+            string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
+            return Redirect(paymentUrl);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> VnPayCallback()
+        {
+            if (Request.Query.Count > 0)
+            {
+                string vnp_HashSecret = "FJ1QVMTG3QFH25SSJBSOY9ESG5TUGSYW";
+                var vnpayData = Request.Query;
+                var vnpay = new VnPayLibrary();
+
+                foreach (var key in vnpayData.Keys)
+                {
+                    if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_"))
+                    {
+                        vnpay.AddResponseData(key, vnpayData[key]);
+                    }
+                }
+
+                string txnRef = vnpay.GetResponseData("vnp_TxnRef");
+                string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
+                string? vnp_SecureHash = Request.Query["vnp_SecureHash"].ToString();
+                string vnp_TransactionNo = vnpay.GetResponseData("vnp_TransactionNo");
+                
+                string amountStr = vnpay.GetResponseData("vnp_Amount");
+                decimal vnp_Amount = 0;
+                if (long.TryParse(amountStr, out long parsedAmount))
+                {
+                    vnp_Amount = (decimal)parsedAmount / 100m;
+                }
+
+                bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, vnp_HashSecret);
+                if (checkSignature)
+                {
+                    string[] parts = txnRef.Split('_');
+                    if (parts.Length > 0 && int.TryParse(parts[0], out int bookingId))
+                    {
+                        var booking = await _context.Bookings
+                            .Include(b => b.Car)
+                            .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+
+                        if (booking != null)
+                        {
+                            if (vnp_ResponseCode == "00")
+                            {
+                                string oldStatus = booking.Status;
+                                booking.Status = "Paid";
+                                _context.Bookings.Update(booking);
+
+                                var payment = new Payment
+                                {
+                                    BookingId = bookingId,
+                                    Amount = vnp_Amount,
+                                    PaymentMethod = "VNPay",
+                                    TransactionReference = vnp_TransactionNo,
+                                    PaymentStatus = "Paid",
+                                    PaidAt = DateTime.Now
+                                };
+                                _context.Payments.Add(payment);
+
+                                var history = new BookingHistory
+                                {
+                                    BookingId = bookingId,
+                                    ChangedBy = CurrentCustomerId > 0 ? CurrentCustomerId : booking.CustomerId,
+                                    OldStatus = oldStatus,
+                                    NewStatus = "Paid",
+                                    Note = $"Thanh toán thành công qua VNPay. Mã GD: {vnp_TransactionNo}.",
+                                    ChangedAt = DateTime.Now
+                                };
+                                _context.BookingHistories.Add(history);
+
+                                await _context.SaveChangesAsync();
+
+                                TempData["SuccessMessage"] = $"Thanh toán thành công cho đơn đặt xe #{bookingId}!";
+                            }
+                            else
+                            {
+                                TempData["ErrorMessage"] = $"Thanh toán thất bại cho đơn đặt xe #{bookingId}. Mã lỗi: {vnp_ResponseCode}";
+                            }
+                        }
+                        else
+                        {
+                            TempData["ErrorMessage"] = "Không tìm thấy thông tin đơn đặt xe tương ứng với giao dịch.";
+                        }
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = "Mã giao dịch không hợp lệ.";
+                    }
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Chữ ký bảo mật không hợp lệ.";
+                }
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Không nhận được thông tin phản hồi từ cổng thanh toán VNPay.";
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }

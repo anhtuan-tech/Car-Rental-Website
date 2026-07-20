@@ -1,16 +1,31 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CarRetalWebsite.Models;
 
 namespace CarRetalWebsite.Controllers
 {
+    [Authorize]
     public class FeedbackController : Controller
     {
         private readonly CarRentalDbContext _context;
-        private const int CurrentCustomerId = 1; // Khách hàng Vũ Minh Khang cố định trong DB
+
+        private int CurrentCustomerId
+        {
+            get
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim, out int id))
+                {
+                    return id;
+                }
+                return 0;
+            }
+        }
 
         public FeedbackController(CarRentalDbContext context)
         {
