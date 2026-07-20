@@ -14,6 +14,7 @@ namespace CarRetalWebsite
             builder.Services.AddControllersWithViews();
             builder.Services.AddMemoryCache();
             builder.Services.AddScoped<CarRetalWebsite.Services.EmailService>();
+            builder.Services.AddScoped<CarRetalWebsite.Services.IImageService, CarRetalWebsite.Services.ImageService>();
             // Register DbContext with connection string from appsettings.json
             builder.Services.AddDbContext<CarRentalDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -45,6 +46,29 @@ namespace CarRetalWebsite
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
+            // Serve static files from the root repo "image" folder
+            var repoRoot = System.IO.Path.GetFullPath(System.IO.Path.Combine(app.Environment.ContentRootPath, "..", ".."));
+            var imagePath = System.IO.Path.Combine(repoRoot, "image");
+
+            if (!System.IO.Directory.Exists(imagePath))
+            {
+                System.IO.Directory.CreateDirectory(imagePath);
+            }
+            if (!System.IO.Directory.Exists(System.IO.Path.Combine(imagePath, "Car")))
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(imagePath, "Car"));
+            }
+            if (!System.IO.Directory.Exists(System.IO.Path.Combine(imagePath, "User")))
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(imagePath, "User"));
+            }
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(imagePath),
+                RequestPath = "/image"
+            });
 
             app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
 

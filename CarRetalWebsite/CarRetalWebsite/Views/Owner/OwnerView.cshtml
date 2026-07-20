@@ -84,6 +84,14 @@
                 <label>Description:</label>
                 <textarea id="carDescription"></textarea>
             </div>
+            <div class="form-group" id="existingImagesContainer" style="display: none;">
+                <label>Existing Images:</label>
+                <div id="existingImagesList" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px;"></div>
+            </div>
+            <div class="form-group">
+                <label>Car Images:</label>
+                <input type="file" id="carImages" accept="image/*" multiple />
+            </div>
             <div class="modal-actions">
                 <button type="button" class="btn-save" onclick="saveCarData()">Save</button>
                 <button type="button" class="btn-cancel" onclick="closeAddUpdateCarModal()">Cancel</button>
@@ -388,6 +396,15 @@
     function showCarDetails(car) {
         currentCar = car;
         const carDetails = document.getElementById('carDetails');
+        let imagesHtml = '';
+        if (car.images && car.images.length > 0) {
+            imagesHtml = `<div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">` +
+                car.images.map(img => `<img src="${img.imageUrl}" style="width: 100px; height: 75px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />`).join('') +
+                `</div>`;
+        } else {
+            imagesHtml = '<p><em>No images uploaded</em></p>';
+        }
+
         carDetails.innerHTML = `
             <h2>${car.name}</h2>
             <p><strong>Brand:</strong> ${car.brand}</p>
@@ -395,6 +412,8 @@
             <p><strong>Type:</strong> ${car.carType}</p>
             <p><strong>Price per Day:</strong> $${car.pricePerDay}</p>
             <p><strong>Description:</strong> ${car.description || 'No description'}</p>
+            <p><strong>Car Images:</strong></p>
+            ${imagesHtml}
         `;
         document.getElementById('carModal').style.display = 'block';
     }
@@ -408,6 +427,8 @@
         isUpdating = false;
         document.getElementById('modalTitle').textContent = 'Add New Car';
         document.getElementById('carForm').reset();
+        document.getElementById('existingImagesContainer').style.display = 'none';
+        document.getElementById('existingImagesList').innerHTML = '';
         document.getElementById('addUpdateCarModal').style.display = 'block';
     }
 
@@ -423,6 +444,17 @@
         document.getElementById('carPrice').value = currentCar.pricePerDay;
         document.getElementById('carDescription').value = currentCar.description || '';
         
+        // Show existing images
+        const container = document.getElementById('existingImagesContainer');
+        const list = document.getElementById('existingImagesList');
+        if (currentCar.images && currentCar.images.length > 0) {
+            list.innerHTML = currentCar.images.map(img => `<img src="${img.imageUrl}" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />`).join('');
+            container.style.display = 'block';
+        } else {
+            list.innerHTML = '';
+            container.style.display = 'none';
+        }
+
         document.getElementById('carModal').style.display = 'none';
         document.getElementById('addUpdateCarModal').style.display = 'block';
     }
@@ -433,24 +465,29 @@
     }
 
     function saveCarData() {
-        const formData = {
-            id: isUpdating ? currentCar.id : null,
-            name: document.getElementById('carName').value,
-            brand: document.getElementById('carBrand').value,
-            model: document.getElementById('carModel').value,
-            carType: document.getElementById('carType').value,
-            pricePerDay: parseFloat(document.getElementById('carPrice').value),
-            description: document.getElementById('carDescription').value
-        };
+        const formData = new FormData();
+        if (isUpdating && currentCar) {
+            formData.append('id', currentCar.id);
+        }
+        formData.append('name', document.getElementById('carName').value);
+        formData.append('brand', document.getElementById('carBrand').value);
+        formData.append('model', document.getElementById('carModel').value);
+        formData.append('carType', document.getElementById('carType').value);
+        formData.append('pricePerDay', document.getElementById('carPrice').value);
+        formData.append('description', document.getElementById('carDescription').value);
+
+        const imagesInput = document.getElementById('carImages');
+        if (imagesInput && imagesInput.files.length > 0) {
+            for (let i = 0; i < imagesInput.files.length; i++) {
+                formData.append('imageFiles', imagesInput.files[i]);
+            }
+        }
 
         const url = isUpdating ? '/Owner/UpdateCar' : '/Owner/AddCar';
         
         fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
+            body: formData
         })
         .then(response => response.json())
         .then(data => {

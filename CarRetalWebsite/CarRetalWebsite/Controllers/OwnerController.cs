@@ -13,10 +13,12 @@ namespace CarRetalWebsite.Controllers
     public class OwnerController : Controller
     {
         private readonly CarRentalDbContext _context;
+        private readonly CarRetalWebsite.Services.IImageService _imageService;
 
-        public OwnerController(CarRentalDbContext context)
+        public OwnerController(CarRentalDbContext context, CarRetalWebsite.Services.IImageService imageService)
         {
             _context = context;
+            _imageService = imageService;
         }
 
         private int? GetCurrentOwnerId()
@@ -29,7 +31,7 @@ namespace CarRetalWebsite.Controllers
             return null;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var ownerId = GetCurrentOwnerId();
             if (ownerId == null)
@@ -48,6 +50,7 @@ namespace CarRetalWebsite.Controllers
 
             var cars = await _context.Cars
                 .Include(c => c.Type)
+                .Include(c => c.CarImages)
                 .Where(c => c.OwnerId == ownerId.Value && c.Status != "Deleted")
                 .Select(c => new
                 {
@@ -57,7 +60,8 @@ namespace CarRetalWebsite.Controllers
                     model = c.Model,
                     carType = c.Type.TypeName,
                     pricePerDay = c.PricePerDay,
-                    description = c.SpecsJson
+                    description = c.SpecsJson,
+                    images = c.CarImages.Select(ci => new { ci.ImageUrl, ci.IsPrimary }).ToList()
                 })
                 .ToListAsync();
 
@@ -74,6 +78,7 @@ namespace CarRetalWebsite.Controllers
 
             var cars = await _context.Cars
                 .Include(c => c.Type)
+                .Include(c => c.CarImages)
                 .Where(c => c.OwnerId == ownerId.Value && c.Status != "Deleted")
                 .Where(c => c.CarName.ToLower().Contains(q) ||
                             c.Brand.ToLower().Contains(q) ||
@@ -87,7 +92,8 @@ namespace CarRetalWebsite.Controllers
                     model = c.Model,
                     carType = c.Type.TypeName,
                     pricePerDay = c.PricePerDay,
-                    description = c.SpecsJson
+                    description = c.SpecsJson,
+                    images = c.CarImages.Select(ci => new { ci.ImageUrl, ci.IsPrimary }).ToList()
                 })
                 .ToListAsync();
 
@@ -95,7 +101,7 @@ namespace CarRetalWebsite.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCar([FromBody] CarDto carDto)
+        public async Task<IActionResult> AddCar([FromForm] CarDto carDto, List<IFormFile>? imageFiles)
         {
             var ownerId = GetCurrentOwnerId();
             if (ownerId == null) return Unauthorized();
@@ -138,11 +144,33 @@ namespace CarRetalWebsite.Controllers
             _context.Cars.Add(car);
             await _context.SaveChangesAsync();
 
+            // Save uploaded images
+            if (imageFiles != null && imageFiles.Count > 0)
+            {
+                bool isFirst = true;
+                foreach (var file in imageFiles)
+                {
+                    if (file.Length > 0)
+                    {
+                        var savedPath = await _imageService.SaveImageAsync(file, "Car");
+                        var carImage = new CarImage
+                        {
+                            CarId = car.CarId,
+                            ImageUrl = savedPath,
+                            IsPrimary = isFirst
+                        };
+                        _context.CarImages.Add(carImage);
+                        isFirst = false;
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
+
             return Json(new { success = true });
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateCar([FromBody] CarDto carDto)
+        public async Task<IActionResult> UpdateCar([FromForm] CarDto carDto, List<IFormFile>? imageFiles)
         {
             var ownerId = GetCurrentOwnerId();
             if (ownerId == null) return Unauthorized();
@@ -178,6 +206,36 @@ namespace CarRetalWebsite.Controllers
 
             _context.Cars.Update(car);
             await _context.SaveChangesAsync();
+
+            // If new images are uploaded, remove existing ones and save new ones
+            if (imageFiles != null && imageFiles.Count > 0)
+            {
+                var oldImages = await _context.CarImages.Where(ci => ci.CarId == car.CarId).ToListAsync();
+                foreach (var oldImg in oldImages)
+                {
+                    _imageService.DeleteImage(oldImg.ImageUrl);
+                    _context.CarImages.Remove(oldImg);
+                }
+                await _context.SaveChangesAsync();
+
+                bool isFirst = true;
+                foreach (var file in imageFiles)
+                {
+                    if (file.Length > 0)
+                    {
+                        var savedPath = await _imageService.SaveImageAsync(file, "Car");
+                        var carImage = new CarImage
+                        {
+                            CarId = car.CarId,
+                            ImageUrl = savedPath,
+                            IsPrimary = isFirst
+                        };
+                        _context.CarImages.Add(carImage);
+                        isFirst = false;
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
 
             return Json(new { success = true });
         }

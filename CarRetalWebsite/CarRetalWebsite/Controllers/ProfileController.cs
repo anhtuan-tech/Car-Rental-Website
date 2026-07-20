@@ -22,11 +22,13 @@ namespace CarRetalWebsite.Controllers
     {
         private readonly CarRentalDbContext _context;
         private readonly IWebHostEnvironment _environment;
+        private readonly CarRetalWebsite.Services.IImageService _imageService;
 
-        public ProfileController(CarRentalDbContext context, IWebHostEnvironment environment)
+        public ProfileController(CarRentalDbContext context, IWebHostEnvironment environment, CarRetalWebsite.Services.IImageService imageService)
         {
             _context = context;
             _environment = environment;
+            _imageService = imageService;
         }
 
         private string HashPasswordSha256(string password)
@@ -194,21 +196,14 @@ namespace CarRetalWebsite.Controllers
                     return RedirectToAction("Index");
                 }
 
-                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "avatars");
-                if (!Directory.Exists(uploadsFolder))
+                // Delete old avatar if any
+                if (!string.IsNullOrEmpty(user.Profile.AvatarUrl))
                 {
-                    Directory.CreateDirectory(uploadsFolder);
+                    _imageService.DeleteImage(user.Profile.AvatarUrl);
                 }
 
-                var uniqueFileName = $"avatar_{user.UserId}_{DateTime.Now.Ticks}{extension}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await model.AvatarFile.CopyToAsync(fileStream);
-                }
-
-                user.Profile.AvatarUrl = $"/uploads/avatars/{uniqueFileName}";
+                var savedPath = await _imageService.SaveImageAsync(model.AvatarFile, "User");
+                user.Profile.AvatarUrl = savedPath;
             }
 
             // Update user & profile attributes

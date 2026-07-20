@@ -15,10 +15,12 @@ namespace CarRetalWebsite.Controllers
     public class AdminController : Controller
     {
         private readonly CarRentalDbContext _context;
+        private readonly CarRetalWebsite.Services.IImageService _imageService;
 
-        public AdminController(CarRentalDbContext context)
+        public AdminController(CarRentalDbContext context, CarRetalWebsite.Services.IImageService imageService)
         {
             _context = context;
+            _imageService = imageService;
         }
 
         private string HashPasswordSha256(string password)
@@ -93,37 +95,34 @@ namespace CarRetalWebsite.Controllers
         {
             if (file == null || file.Length == 0) return null;
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "avatars");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension)) return null;
 
-            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-
-            return "/uploads/avatars/" + uniqueFileName;
+            return await _imageService.SaveImageAsync(file, "User");
         }
 
         private void DeleteOldAvatarFile(string? avatarUrl)
         {
-            if (string.IsNullOrEmpty(avatarUrl) || !avatarUrl.StartsWith("/uploads/avatars/")) return;
+            if (string.IsNullOrEmpty(avatarUrl)) return;
 
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", avatarUrl.TrimStart('/'));
-            if (System.IO.File.Exists(filePath))
+            if (avatarUrl.StartsWith("/image/User/"))
             {
-                try
+                _imageService.DeleteImage(avatarUrl);
+            }
+            else if (avatarUrl.StartsWith("/uploads/avatars/"))
+            {
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", avatarUrl.TrimStart('/'));
+                if (System.IO.File.Exists(filePath))
                 {
-                    System.IO.File.Delete(filePath);
-                }
-                catch
-                {
-                    // Ignore exception on delete
+                    try
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                    catch
+                    {
+                        // Ignore exception on delete
+                    }
                 }
             }
         }
