@@ -1,0 +1,634 @@
+﻿@model CarRetalWebsite.Models.Booking
+
+@{
+    ViewData["Title"] = "Booking Details";
+    var statusClass = (Model.Status ?? "").Replace(" ", "");
+    var carImage = Model.Car?.CarImages?.FirstOrDefault()?.ImageUrl;
+}
+
+<style>
+    :root {
+        --brand: #2563eb;
+        --brand-dark: #1d4ed8;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e6eaf1;
+        --bg: #f4f6fb;
+        --card: #ffffff;
+    }
+
+    body {
+        background: radial-gradient(1200px 500px at 100% -10%, rgba(37, 99, 235, 0.08), transparent 60%), var(--bg);
+        color: var(--ink);
+    }
+
+    .cr-container {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+    }
+
+    /* BREADCRUMB */
+    .cr-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 18px;
+    }
+
+        .cr-breadcrumb a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+            .cr-breadcrumb a:hover {
+                color: var(--brand);
+            }
+
+    .cr-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 11px 18px;
+        border: 1px solid transparent;
+        text-decoration: none;
+        transition: all 0.18s ease;
+        cursor: pointer;
+        font-size: 0.9rem;
+        line-height: 1;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .cr-btn-ghost {
+        background: var(--card);
+        color: var(--ink);
+        border-color: var(--line);
+    }
+
+        .cr-btn-ghost:hover {
+            border-color: var(--brand);
+            color: var(--brand);
+        }
+
+    .cr-btn-primary {
+        background: var(--brand);
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+    }
+
+        .cr-btn-primary:hover {
+            background: var(--brand-dark);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+    .cr-btn-success {
+        background: #16a34a;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(22, 163, 74, 0.25);
+    }
+
+        .cr-btn-success:hover {
+            background: #15803d;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+    /* LAYOUT */
+    .cr-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .cr-card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+    }
+
+    .cr-card-pad {
+        padding: 24px;
+    }
+
+    .cr-col {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* HERO */
+    .cr-hero {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 24px;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .cr-hero-id {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--brand);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .cr-hero-name {
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    .cr-hero-sub {
+        color: var(--muted);
+        margin: 6px 0 0;
+        font-size: 0.9rem;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+        .status::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            margin-right: 7px;
+            background: currentColor;
+        }
+
+    .status-Pending {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .status-Approved {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .status-Active {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .status-Completed {
+        background: #ede9fe;
+        color: #7c3aed;
+    }
+
+    .status-Cancelled {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    /* CAR STRIP */
+    .cr-car-strip {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--line);
+        background: #f8fafc;
+    }
+
+    .cr-car-thumb {
+        width: 72px;
+        height: 54px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        flex-shrink: 0;
+    }
+
+    .cr-car-thumb-ph {
+        width: 72px;
+        height: 54px;
+        border-radius: 10px;
+        border: 1px dashed var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        flex-shrink: 0;
+    }
+
+    .cr-car-name {
+        font-weight: 700;
+    }
+
+    .cr-car-meta {
+        font-size: 0.82rem;
+        color: var(--muted);
+    }
+
+    .cr-plate {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.78rem;
+        font-weight: 600;
+        background: #f1f5f9;
+        border: 1px solid var(--line);
+        padding: 3px 9px;
+        border-radius: 8px;
+    }
+
+    /* INFO GRID */
+    .cr-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2px;
+        background: var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+    }
+
+    .cr-info-item {
+        background: var(--card);
+        padding: 16px 18px;
+    }
+
+    .cr-info-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin-bottom: 6px;
+    }
+
+    .cr-info-value {
+        font-size: 0.98rem;
+        font-weight: 600;
+        color: var(--ink);
+        word-break: break-word;
+    }
+
+    .cr-price-value {
+        color: var(--brand);
+        font-size: 1.15rem;
+        font-weight: 800;
+    }
+
+    /* SECTION TITLE */
+    .cr-section-title {
+        font-size: 0.95rem;
+        font-weight: 800;
+        margin: 0 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* PAYMENTS */
+    .cr-pay-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 0.9rem;
+    }
+
+        .cr-pay-row:last-child {
+            border-bottom: none;
+        }
+
+    .cr-pay-amount {
+        font-weight: 700;
+    }
+
+    .cr-pill {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: var(--muted);
+    }
+
+    /* TIMELINE */
+    .cr-timeline {
+        position: relative;
+        padding-left: 24px;
+    }
+
+        .cr-timeline::before {
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 4px;
+            bottom: 4px;
+            width: 2px;
+            background: var(--line);
+        }
+
+    .cr-tl-item {
+        position: relative;
+        padding-bottom: 18px;
+    }
+
+        .cr-tl-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .cr-tl-item::before {
+            content: "";
+            position: absolute;
+            left: -22px;
+            top: 3px;
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            background: var(--brand);
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px var(--brand);
+        }
+
+    .cr-tl-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-size: 0.88rem;
+        font-weight: 600;
+    }
+
+    .cr-tl-arrow {
+        color: var(--muted);
+    }
+
+    .cr-tl-meta {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 4px;
+    }
+
+    .cr-tl-note {
+        font-size: 0.85rem;
+        color: var(--ink);
+        margin-top: 6px;
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 12px;
+    }
+
+    /* FORM */
+    .cr-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .cr-select, .cr-textarea {
+        width: 100%;
+        border-radius: 12px;
+        padding: 11px 14px;
+        border: 1px solid var(--line);
+        background: #fbfcfe;
+        font-size: 0.92rem;
+        color: var(--ink);
+        transition: 0.18s ease;
+        font-family: inherit;
+    }
+
+    .cr-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+        .cr-select:focus, .cr-textarea:focus {
+            outline: none;
+            border-color: var(--brand);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+    .cr-form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .cr-empty-sm {
+        color: var(--muted);
+        font-size: 0.88rem;
+        text-align: center;
+        padding: 16px;
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+    }
+
+    @@media (max-width: 900px) {
+        .cr-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="cr-container">
+
+    <!-- BREADCRUMB -->
+    <div class="cr-breadcrumb">
+        <a asp-action="Index">Quản lý Booking</a>
+        <span>/</span>
+        <span style="color:var(--ink); font-weight:600;">Đơn #@Model.BookingId</span>
+    </div>
+
+    <div class="cr-grid">
+
+        <!-- LEFT COLUMN -->
+        <div class="cr-col">
+
+            <!-- MAIN CARD -->
+            <div class="cr-card">
+                <div class="cr-hero">
+                    <div>
+                        <span class="cr-hero-id">BOOKING #@Model.BookingId</span>
+                        <h1 class="cr-hero-name">@(Model.Customer?.Profile?.FullName ?? Model.Customer?.Email ?? "Khách hàng")</h1>
+                        <p class="cr-hero-sub">
+                            @Model.StartDate.ToString("dd/MM/yyyy") → @Model.EndDate.ToString("dd/MM/yyyy") · @Model.TotalDays ngày
+                        </p>
+                    </div>
+                    <span class="status status-@statusClass">@Model.Status</span>
+                </div>
+
+                <!-- CAR STRIP -->
+                <div class="cr-car-strip">
+                    @if (!string.IsNullOrEmpty(carImage))
+                    {
+                        <img src="@carImage" alt="@Model.Car?.CarName" class="cr-car-thumb" loading="lazy" />
+                    }
+                    else
+                    {
+                        <div class="cr-car-thumb-ph">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2m14 0V9a2 2 0 0 0-2-2h-1.5l-1-2h-5l-1 2H7a2 2 0 0 0-2 2v7" /><circle cx="7.5" cy="16.5" r="1.5" /><circle cx="16.5" cy="16.5" r="1.5" /></svg>
+                        </div>
+                    }
+                    <div style="flex:1;">
+                        <div class="cr-car-name">@(Model.Car?.CarName ?? "N/A")</div>
+                        <div class="cr-car-meta">@(Model.Car?.Owner?.Profile?.FullName ?? Model.Car?.Owner?.Email ?? "—")</div>
+                    </div>
+                    <span class="cr-plate">@(Model.Car?.LicensePlate ?? "—")</span>
+                    <a asp-controller="StaffCar" asp-action="Details" asp-route-id="@Model.CarId" class="cr-btn cr-btn-ghost" style="width:auto;">Xem xe</a>
+                </div>
+
+                <!-- INFO GRID -->
+                <div class="cr-card-pad">
+                    <div class="cr-info">
+                        <div class="cr-info-item">
+                            <div class="cr-info-label">Ngày bắt đầu</div>
+                            <div class="cr-info-value">@Model.StartDate.ToString("dd/MM/yyyy")</div>
+                        </div>
+                        <div class="cr-info-item">
+                            <div class="cr-info-label">Ngày kết thúc</div>
+                            <div class="cr-info-value">@Model.EndDate.ToString("dd/MM/yyyy")</div>
+                        </div>
+                        <div class="cr-info-item">
+                            <div class="cr-info-label">Số ngày thuê</div>
+                            <div class="cr-info-value">@Model.TotalDays ngày</div>
+                        </div>
+                        <div class="cr-info-item">
+                            <div class="cr-info-label">Email khách hàng</div>
+                            <div class="cr-info-value">@(Model.Customer?.Email ?? "—")</div>
+                        </div>
+                        <div class="cr-info-item" style="grid-column: span 2;">
+                            <div class="cr-info-label">Tổng chi phí</div>
+                            <div class="cr-info-value cr-price-value">@Model.SubtotalFee.ToString("N0") ₫</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAYMENTS -->
+            <div class="cr-card cr-card-pad">
+                <h3 class="cr-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /></svg>
+                    Thanh toán
+                </h3>
+                @if (Model.Payments != null && Model.Payments.Any())
+                {
+                    @foreach (var p in Model.Payments)
+                    {
+                        <div class="cr-pay-row">
+                            <div>
+                                <div class="cr-pay-amount">@p.Amount.ToString("N0") ₫</div>
+                                <div style="font-size:0.78rem; color:var(--muted); margin-top:2px;">
+                                    @p.PaymentMethod@(p.PaidAt.HasValue ? " · " + p.PaidAt.Value.ToString("dd/MM/yyyy HH:mm") : "")
+                                </div>
+                            </div>
+                            <span class="cr-pill">@p.PaymentStatus</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="cr-empty-sm">Chưa có giao dịch thanh toán nào.</div>
+                }
+            </div>
+
+            <!-- HISTORY TIMELINE -->
+            <div class="cr-card cr-card-pad">
+                <h3 class="cr-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3" /><circle cx="12" cy="12" r="9" /></svg>
+                    Lịch sử trạng thái
+                </h3>
+                @if (Model.BookingHistories != null && Model.BookingHistories.Any())
+                {
+                    <div class="cr-timeline">
+                        @foreach (var h in Model.BookingHistories.OrderByDescending(x => x.ChangedAt))
+                        {
+                            <div class="cr-tl-item">
+                                <div class="cr-tl-head">
+                                    <span class="status status-@((h.OldStatus ?? "").Replace(" ", ""))">@h.OldStatus</span>
+                                    <span class="cr-tl-arrow">→</span>
+                                    <span class="status status-@((h.NewStatus ?? "").Replace(" ", ""))">@h.NewStatus</span>
+                                </div>
+                                <div class="cr-tl-meta">
+                                    @h.ChangedAt.ToString("dd/MM/yyyy HH:mm")
+                                    · bởi @(h.ChangedByNavigation?.Profile?.FullName ?? h.ChangedByNavigation?.Email ?? "Hệ thống")
+                                </div>
+                                @if (!string.IsNullOrEmpty(h.Note))
+                                {
+                                    <div class="cr-tl-note">@h.Note</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="cr-empty-sm">Chưa có lịch sử thay đổi trạng thái.</div>
+                }
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="cr-col">
+            <div class="cr-card cr-card-pad">
+                <h3 class="cr-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.2-8.5" /><path d="M21 3v6h-6" /></svg>
+                    Cập nhật trạng thái
+                </h3>
+
+                <form asp-action="UpdateStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.BookingId" />
+
+                    <label class="cr-label">Trạng thái mới</label>
+                    <select name="newStatus" class="cr-select">
+                        <option value="Pending" selected="@(Model.Status == "Pending")">Pending — Chờ duyệt</option>
+                        <option value="Approved" selected="@(Model.Status == "Approved")">Approved — Đã duyệt</option>
+                        <option value="Active" selected="@(Model.Status == "Active")">Active — Đang thuê</option>
+                        <option value="Completed" selected="@(Model.Status == "Completed")">Completed — Hoàn thành</option>
+                        <option value="Cancelled" selected="@(Model.Status == "Cancelled")">Cancelled — Đã hủy</option>
+                    </select>
+
+                    <label class="cr-label" style="margin-top:16px;">Ghi chú (tùy chọn)</label>
+                    <textarea name="note" class="cr-textarea" placeholder="Lý do thay đổi trạng thái, ghi chú nội bộ..."></textarea>
+
+                    <div class="cr-form-actions">
+                        <button type="submit" class="cr-btn cr-btn-success">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5" /></svg>
+                            Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+
+                <div style="margin-top:22px; padding-top:22px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:10px;">
+                    <a asp-controller="StaffCar" asp-action="Details" asp-route-id="@Model.CarId" class="cr-btn cr-btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2m14 0V9a2 2 0 0 0-2-2h-1.5l-1-2h-5l-1 2H7a2 2 0 0 0-2 2v7" /><circle cx="7.5" cy="16.5" r="1.5" /><circle cx="16.5" cy="16.5" r="1.5" /></svg>
+                        Xem xe của đơn này
+                    </a>
+                    <a asp-action="Index" class="cr-btn cr-btn-ghost">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7M19 12H5" /></svg>
+                        Quay lại danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
