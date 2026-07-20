@@ -123,9 +123,13 @@ namespace CarRetalWebsite.Controllers
             {
                 return RedirectToAction("Dashboard", "Admin");
             }
-            else if (user.Role?.RoleName == "Owner" || user.Role?.RoleName == "Staff")
+            else if (user.Role?.RoleName == "Staff")
             {
                 return RedirectToAction("Index", "StaffCar");
+            }
+            else if (user.Role?.RoleName == "Owner")
+            {
+                return RedirectToAction("Index", "Owner");
             }
 
             return RedirectToAction("Index", "Home");

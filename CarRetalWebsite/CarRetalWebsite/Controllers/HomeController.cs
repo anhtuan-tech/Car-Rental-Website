@@ -21,9 +21,13 @@ namespace CarRetalWebsite.Controllers
                 {
                     return RedirectToAction("Dashboard", "Admin");
                 }
-                else if (User.IsInRole("Owner") || User.IsInRole("Staff"))
+                else if (User.IsInRole("Staff"))
                 {
                     return RedirectToAction("Index", "StaffCar");
+                }
+                else if (User.IsInRole("Owner"))
+                {
+                    return RedirectToAction("Index", "Owner");
                 }
             }
 
