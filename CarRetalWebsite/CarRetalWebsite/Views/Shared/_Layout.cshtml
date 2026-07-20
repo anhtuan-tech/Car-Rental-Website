@@ -211,28 +211,55 @@
                                     <i class="fa-solid fa-chevron-down text-muted fs-7"></i>
                                 </div>
                                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
-                                    <li>
-                                        <a class="dropdown-item dropdown-item-custom" href="/Profile">
-                                            <i class="fa-regular fa-user text-primary-custom"></i> Hồ sơ cá nhân
-                                        </a>
-                                    </li>
-                                    <li>
-                                         <a class="dropdown-item dropdown-item-custom" href="/Booking">
-                                             <i class="fa-solid fa-receipt text-primary-custom"></i> Chuyến đi của tôi
-                                         </a>
-                                     </li>
                                      <li>
-                                         <a class="dropdown-item dropdown-item-custom" asp-controller="Feedback" asp-action="MyFeedbacks">
-                                             <i class="fa-regular fa-comment-dots text-primary-custom"></i> Lịch sử feedback
+                                         <a class="dropdown-item dropdown-item-custom" href="/Profile">
+                                             <i class="fa-regular fa-user text-primary-custom"></i> Hồ sơ cá nhân
                                          </a>
                                      </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item dropdown-item-custom text-danger" asp-controller="Account" asp-action="Logout">
-                                            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
-                                        </a>
-                                    </li>
-                                </ul>
+                                     @if (User.IsInRole("Admin"))
+                                     {
+                                         <li>
+                                             <a class="dropdown-item dropdown-item-custom text-primary fw-bold" href="/Admin/Dashboard">
+                                                 <i class="fa-solid fa-chart-line"></i> Dashboard Admin
+                                             </a>
+                                         </li>
+                                     }
+                                     else if (User.IsInRole("Staff"))
+                                     {
+                                         <li>
+                                             <a class="dropdown-item dropdown-item-custom text-primary fw-bold" href="/StaffCar/Index">
+                                                 <i class="fa-solid fa-clipboard-list"></i> Dashboard Staff
+                                             </a>
+                                         </li>
+                                     }
+                                     else if (User.IsInRole("Owner"))
+                                     {
+                                         <li>
+                                             <a class="dropdown-item dropdown-item-custom text-primary fw-bold" href="/Owner/Index">
+                                                 <i class="fa-solid fa-wallet"></i> Dashboard Owner
+                                             </a>
+                                         </li>
+                                     }
+                                     else if (User.IsInRole("Customer"))
+                                     {
+                                         <li>
+                                              <a class="dropdown-item dropdown-item-custom" href="/Booking">
+                                                  <i class="fa-solid fa-receipt text-primary-custom"></i> Chuyến đi của tôi
+                                              </a>
+                                          </li>
+                                          <li>
+                                              <a class="dropdown-item dropdown-item-custom" asp-controller="Feedback" asp-action="MyFeedbacks">
+                                                  <i class="fa-regular fa-comment-dots text-primary-custom"></i> Lịch sử feedback
+                                              </a>
+                                          </li>
+                                     }
+                                     <li><hr class="dropdown-divider"></li>
+                                     <li>
+                                         <a class="dropdown-item dropdown-item-custom text-danger" asp-controller="Account" asp-action="Logout">
+                                             <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                                         </a>
+                                     </li>
+                                 </ul>
                             </div>
                         }
                     </div>

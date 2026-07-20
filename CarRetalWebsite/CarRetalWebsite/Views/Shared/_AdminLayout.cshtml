@@ -212,14 +212,13 @@
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: none;
             }
         }
 
         .admin-content {
             padding: 30px;
             flex-grow: 1;
-            animation: fadeInContent 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Responsive */
@@ -242,42 +241,105 @@
     <div class="admin-wrapper">
         <!-- Sidebar -->
         <aside class="admin-sidebar" id="adminSidebar">
-            <a href="/Admin/Dashboard" class="sidebar-brand">
-                <i class="fa-solid fa-car-side"></i>
-                <span>CarRental</span>
-            </a>
+            @if (User.IsInRole("Admin"))
+            {
+                <a href="/Admin/Dashboard" class="sidebar-brand">
+                    <i class="fa-solid fa-car-side"></i>
+                    <span>CarRental Admin</span>
+                </a>
+            }
+            else if (User.IsInRole("Staff"))
+            {
+                <a href="/StaffCar/Index" class="sidebar-brand">
+                    <i class="fa-solid fa-car-side"></i>
+                    <span>CarRental Staff</span>
+                </a>
+            }
+            else if (User.IsInRole("Owner"))
+            {
+                <a href="/Owner/Index" class="sidebar-brand">
+                    <i class="fa-solid fa-car-side"></i>
+                    <span>CarRental Partner</span>
+                </a>
+            }
+            else
+            {
+                <a href="/" class="sidebar-brand">
+                    <i class="fa-solid fa-car-side"></i>
+                    <span>CarRental Portal</span>
+                </a>
+            }
             
             <ul class="sidebar-menu">
-                <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
-                    <a href="/Admin/Dashboard" class="menu-link">
-                        <i class="fa-solid fa-chart-pie"></i>
-                        <span>Tổng quan</span>
-                    </a>
-                </li>
-                <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Staffs" ? "active" : "")">
-                    <a href="/Admin/Staffs" class="menu-link">
-                        <i class="fa-solid fa-user-shield"></i>
-                        <span>Quản lý Nhân viên</span>
-                    </a>
-                </li>
-                <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active" : "")">
-                    <a href="/Admin/Users" class="menu-link">
-                        <i class="fa-solid fa-users"></i>
-                        <span>Quản lý Thành viên</span>
-                    </a>
-                </li>
-                <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "RevenueReport" ? "active" : "")">
-                    <a href="/Admin/RevenueReport" class="menu-link">
-                        <i class="fa-solid fa-sack-dollar"></i>
-                        <span>Báo cáo Doanh thu</span>
-                    </a>
-                </li>
-                <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "OwnerRevenue" ? "active" : "")">
-                    <a href="/Admin/OwnerRevenue" class="menu-link">
-                        <i class="fa-solid fa-hand-holding-dollar"></i>
-                        <span>Doanh thu Chủ xe</span>
-                    </a>
-                </li>
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Dashboard", StringComparison.OrdinalIgnoreCase) && string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), "Admin", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/Admin/Dashboard" class="menu-link">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Staffs", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/Admin/Staffs" class="menu-link">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <span>Quản lý Nhân viên</span>
+                        </a>
+                    </li>
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Users", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/Admin/Users" class="menu-link">
+                            <i class="fa-solid fa-users"></i>
+                            <span>Quản lý Thành viên</span>
+                        </a>
+                    </li>
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "RevenueReport", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/Admin/RevenueReport" class="menu-link">
+                            <i class="fa-solid fa-sack-dollar"></i>
+                            <span>Báo cáo Doanh thu</span>
+                        </a>
+                    </li>
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "OwnerRevenue", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/Admin/OwnerRevenue" class="menu-link">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
+                            <span>Doanh thu Chủ xe</span>
+                        </a>
+                    </li>
+                }
+                else if (User.IsInRole("Staff"))
+                {
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), "StaffCar", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/StaffCar/Index" class="menu-link">
+                            <i class="fa-solid fa-car"></i>
+                            <span>Quản lý ô tô</span>
+                        </a>
+                    </li>
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), "StaffBooking", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/StaffBooking/Index" class="menu-link">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span>Duyệt đặt xe</span>
+                        </a>
+                    </li>
+                }
+                else if (User.IsInRole("Owner"))
+                {
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Index", StringComparison.OrdinalIgnoreCase) && string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), "Owner", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/Owner/Index" class="menu-link">
+                            <i class="fa-solid fa-car"></i>
+                            <span>Xe của tôi</span>
+                        </a>
+                    </li>
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "ViewRentalOrder", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/Owner/ViewRentalOrder" class="menu-link">
+                            <i class="fa-solid fa-receipt"></i>
+                            <span>Đơn thuê xe</span>
+                        </a>
+                    </li>
+                    <li class="menu-item @(string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "ViewEarning", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/Owner/ViewEarning" class="menu-link">
+                            <i class="fa-solid fa-wallet"></i>
+                            <span>Doanh thu của tôi</span>
+                        </a>
+                    </li>
+                }
             </ul>
 
             <div class="sidebar-footer">
@@ -296,12 +358,21 @@
                     <button class="btn btn-light d-lg-none" onclick="toggleSidebar()">
                         <i class="fa-solid fa-bars"></i>
                     </button>
-                    <h2 class="navbar-title">Portal Quản Trị Viên</h2>
+                    <h2 class="navbar-title">
+                        @if (User.IsInRole("Admin")) { <text>Portal Quản Trị Viên</text> }
+                        else if (User.IsInRole("Staff")) { <text>Portal Nhân Viên</text> }
+                        else if (User.IsInRole("Owner")) { <text>Portal Đối Tác Chủ Xe</text> }
+                        else { <text>Dashboard Portal</text> }
+                    </h2>
                 </div>
                 <div class="navbar-user">
                     <div class="user-info d-none d-sm-block">
                         <span class="user-name">@User.Identity?.Name</span>
-                        <span class="user-role">Quản trị viên</span>
+                        <span class="user-role">
+                            @if (User.IsInRole("Admin")) { <text>Quản trị viên</text> }
+                            else if (User.IsInRole("Staff")) { <text>Nhân viên</text> }
+                            else if (User.IsInRole("Owner")) { <text>Chủ xe</text> }
+                        </span>
                     </div>
                     @{
                         var adminAvatar = User.FindFirst("AvatarUrl")?.Value;

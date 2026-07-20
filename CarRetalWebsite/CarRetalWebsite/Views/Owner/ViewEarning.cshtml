@@ -1,82 +1,120 @@
 @model List<BookingHistory>
 
 @{
-    ViewData["Title"] = "View Earning";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Doanh thu của tôi";
 }
 
-<div class="container mt-4">
+<style>
+    .table-custom th {
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #475569;
+        background-color: #f8fafc;
+        border-bottom: 1.5px solid #cbd5e1;
+        padding: 14px 16px;
+    }
+
+    .table-custom td {
+        padding: 14px 16px;
+        font-size: 0.92rem;
+        color: #334155;
+        vertical-align: middle;
+    }
+
+    .card-custom {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.02);
+        padding: 24px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card-custom:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.06);
+    }
+</style>
+
+<div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h2>Rental Bookings Revenue</h2>
+            <h2 class="fw-bold text-dark">Lịch sử doanh thu thuê xe</h2>
+            <p class="text-muted">Xem báo cáo doanh thu từ các chuyến đi đã hoàn thành.</p>
         </div>
     </div>
 
     @if (Model != null && Model.Any())
     {
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Booking ID</th>
-                        <th>Car</th>
-                        <th>Customer</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Total Price</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var booking in Model)
-                    {
-                        @if (booking.NewStatus == "Completed")
+        <div class="card-custom mb-4">
+            <div class="table-responsive">
+                <table class="table table-hover table-custom m-0">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn hàng</th>
+                            <th>Tên xe</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày bắt đầu</th>
+                            <th>Ngày kết thúc</th>
+                            <th>Doanh thu</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in Model)
                         {
-                            var order = booking.Booking;
-                            <tr>
-                                <td>@order.BookingId</td>
-                                <td>@order.Car.CarName</td>
-                                <td>@order.Customer.Profile?.FullName</td>
-                                <td>@order.StartDate.ToString("dd/MM/yyyy")</td>
-                                <td>@order.EndDate.ToString("dd/MM/yyyy")</td>
-                                <td>$@order.OwnerPayout.ToString("F2")</td>
-                                <td>
-                                    <span class="badge bg-success">@booking.NewStatus</span>
-                                </td>
-                            </tr>
+                            @if (booking.NewStatus == "Completed")
+                            {
+                                var order = booking.Booking;
+                                <tr>
+                                    <td>#@order.BookingId</td>
+                                    <td class="fw-semibold">@order.Car.CarName</td>
+                                    <td>@order.Customer.Profile?.FullName</td>
+                                    <td>@order.StartDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@order.EndDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="fw-bold text-success">@order.OwnerPayout.ToString("N0") VNĐ</td>
+                                    <td>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded">@booking.NewStatus</span>
+                                    </td>
+                                </tr>
+                            }
                         }
-                    }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="row mt-4">
+        <div class="row g-4 mt-2">
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Revenue</h5>
-                        <p class="card-text display-6">
-                            $@Model.Sum(b => b.Booking.OwnerPayout).ToString("F2")
-                        </p>
-                    </div>
+                <div class="card-custom">
+                    <h5 class="text-uppercase text-muted fw-bold small mb-2">Tổng doanh thu nhận được</h5>
+                    <p class="display-6 fw-bold text-dark m-0">
+                        @Model.Sum(b => b.Booking.OwnerPayout).ToString("N0") VNĐ
+                    </p>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Completed Bookings</h5>
-                        <p class="card-text display-6">
-                            @Model.Count(b => b.NewStatus == "Completed")
-                        </p>
-                    </div>
+                <div class="card-custom">
+                    <h5 class="text-uppercase text-muted fw-bold small mb-2">Đơn thuê đã hoàn thành</h5>
+                    <p class="display-6 fw-bold text-dark m-0">
+                        @Model.Count(b => b.NewStatus == "Completed")
+                    </p>
                 </div>
             </div>
         </div>
     }
     else
     {
-        <div class="alert alert-info">
-            <strong>No completed bookings found.</strong> Your rental revenue will appear here once you have completed
-            bookings.
+        <div class="alert alert-info border-0 rounded-3 p-4">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fa-solid fa-circle-info fs-3 text-info"></i>
+                <div>
+                    <h5 class="fw-bold mb-1">Chưa có doanh thu nào</h5>
+                    <p class="mb-0 text-muted">Doanh thu từ các chuyến đi của bạn sẽ hiển thị ở đây sau khi đơn hàng chuyển sang trạng thái hoàn thành.</p>
+                </div>
+            </div>
         </div>
     }
 </div>

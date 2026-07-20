@@ -1,96 +1,251 @@
 @model IEnumerable<CarRetalWebsite.Controllers.RentalOrderViewModel>
 
 @{
-	Layout = null; 
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Đơn thuê xe";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-	<meta charset="utf-8" />
-	<title>Booking History</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css" />
-	<style>
-		.chatbox { display:none; position:fixed; right:20px; bottom:20px; width:360px; max-height:70vh; background:#fff; border:1px solid #ccc; box-shadow:0 4px 12px rgba(0,0,0,.15); }
-		.chatbox header { padding:8px 12px; background:#0078d4; color:#fff; }
-		.chatbox .body { padding:12px; overflow:auto; max-height:56vh; }
-		.chatbox .footer { padding:8px 12px; border-top:1px solid #eee; }
-	</style>
-</head>
-<body>
-	<main class="container">
-		<h3>Booking History</h3>
+<style>
+    .table-custom th {
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #475569;
+        background-color: #f8fafc;
+        border-bottom: 1.5px solid #cbd5e1;
+        padding: 14px 16px;
+    }
 
-		<table role="table">
-			<thead>
-				<tr>
-					<th>Booking ID</th>
-					<th>Car</th>
-					<th>Renter</th>
-					<th>From</th>
-					<th>To</th>
-					<th>Status</th>
-					<th></th>
-				</tr>
-			</thead>
-			<tbody>
-				@if (Model != null) {
-					foreach (var b in Model) {
-						<tr>
-							<td>@b.Id</td>
-							<td>@b.CarName</td>
-							<td>@b.RenterName</td>
-							<td>@(b.StartDate ?? "")</td>
-							<td>@(b.EndDate ?? "")</td>
-							<td>@(b.Status ?? "")</td>
-							<td>
-								<button class="primary" data-booking='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(b))' onclick="openChat(this)">Open Chat</button>
-							</td>
-						</tr>
-					}
-				}
-			</tbody>
-		</table>
-	</main>
+    .table-custom td {
+        padding: 14px 16px;
+        font-size: 0.92rem;
+        color: #334155;
+        vertical-align: middle;
+    }
 
-	<div id="chatbox" class="chatbox" aria-hidden="true">
-		<header>
-			<span id="chat-title">Booking</span>
-			<button style="float:right; background:transparent; border:none; color:#fff;" onclick="closeChat()">✕</button>
-		</header>
-		<div class="body" id="chat-body">
-			<!-- booking details go here -->
-		</div>
-		<div class="footer">
-			<input id="chat-input" type="text" placeholder="Type message..." style="width:70%;" />
-			<button onclick="sendMessage()">Send</button>
-		</div>
-	</div>
+    .card-custom {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.02);
+        padding: 24px;
+    }
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-	<script>
-		function openChat(btn) {
-			var data = $(btn).data('booking');
-			var box = $('#chatbox');
-			$('#chat-title').text('Booking #' + (data.Id || ''));
-			var html = '<p><strong>Car:</strong> ' + (data.CarName||'') + '</p>' +
-				'<p><strong>Renter:</strong> ' + (data.RenterName||'') + '</p>' +
-				'<p><strong>From:</strong> ' + (data.StartDate||'') + '</p>' +
-				'<p><strong>To:</strong> ' + (data.EndDate||'') + '</p>' +
-				'<p><strong>Status:</strong> ' + (data.Status||'') + '</p>';
-			if (data.Message) html += '<hr/><p><strong>Initial Message:</strong><br/>' + data.Message + '</p>';
-			$('#chat-body').html(html);
-			box.show().attr('aria-hidden','false');
-		}
+    /* Modern Chat Box */
+    .chatbox-custom {
+        display: none;
+        position: fixed;
+        right: 30px;
+        bottom: 30px;
+        width: 380px;
+        max-height: 80vh;
+        background: #ffffff;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+        z-index: 1050;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
 
-		function closeChat(){ $('#chatbox').hide().attr('aria-hidden','true'); }
+    .chatbox-header {
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        color: #ffffff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-		function sendMessage(){
-			var msg = $('#chat-input').val().trim(); if(!msg) return;
-			$('#chat-body').append('<div><strong>You:</strong> ' + $('<div/>').text(msg).html() + '</div>');
-			$('#chat-input').val('');
-			// TODO: send to server via AJAX endpoint
-		}
-	</script>
-</body>
-</html>
+    .chatbox-body {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: 50vh;
+        background-color: #f8fafc;
+    }
+
+    .chatbox-footer {
+        padding: 16px 20px;
+        border-top: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .chat-input {
+        flex: 1;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .chat-input:focus {
+        border-color: #0284c7;
+    }
+
+    .btn-chat-send {
+        background-color: #0284c7;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 16px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-chat-send:hover {
+        background-color: #0369a1;
+    }
+
+    .btn-open-chat {
+        background-color: #f0f9ff;
+        color: #0284c7;
+        border: 1px solid #bae6fd;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-open-chat:hover {
+        background-color: #0284c7;
+        color: white;
+    }
+
+    .badge-status {
+        padding: 6px 12px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        border-radius: 8px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-dark">Danh sách đơn đặt xe của tôi</h2>
+            <p class="text-muted">Theo dõi và phản hồi nhanh cho khách hàng thuê xe.</p>
+        </div>
+    </div>
+
+    <div class="card-custom">
+        <div class="table-responsive">
+            <table class="table table-hover table-custom m-0">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Xe thuê</th>
+                        <th>Khách hàng</th>
+                        <th>Từ ngày</th>
+                        <th>Đến ngày</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var b in Model)
+                        {
+                            string statusClass = "bg-secondary-subtle text-secondary";
+                            if (b.Status == "Pending") statusClass = "bg-warning-subtle text-warning border border-warning-subtle";
+                            else if (b.Status == "Approved" || b.Status == "Paid") statusClass = "bg-info-subtle text-info border border-info-subtle";
+                            else if (b.Status == "Active") statusClass = "bg-primary-subtle text-primary border border-primary-subtle";
+                            else if (b.Status == "Completed") statusClass = "bg-success-subtle text-success border border-success-subtle";
+                            else if (b.Status == "Cancelled" || b.Status == "Rejected") statusClass = "bg-danger-subtle text-danger border border-danger-subtle";
+
+                            <tr>
+                                <td class="fw-semibold">#@b.Id</td>
+                                <td class="fw-bold">@b.CarName</td>
+                                <td>@b.RenterName</td>
+                                <td>@(b.StartDate ?? "")</td>
+                                <td>@(b.EndDate ?? "")</td>
+                                <td>
+                                    <span class="badge-status @statusClass">@(b.Status ?? "Chờ xử lý")</span>
+                                </td>
+                                <td>
+                                    <button class="btn-open-chat" data-booking='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(b))' onclick="openChat(this)">
+                                        <i class="fa-regular fa-comments me-1"></i> Chi tiết & Chat
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Không có đơn đặt xe nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Slide-out/Popup Chatbox -->
+<div id="chatbox" class="chatbox-custom" aria-hidden="true">
+    <div class="chatbox-header">
+        <span id="chat-title" class="fw-bold"><i class="fa-regular fa-comments me-2"></i> Chi tiết đặt xe</span>
+        <button style="background:transparent; border:none; color:#fff; font-size: 1.1rem; cursor:pointer;" onclick="closeChat()">✕</button>
+    </div>
+    <div class="chatbox-body" id="chat-body">
+        <!-- Booking details will go here -->
+    </div>
+    <div class="chatbox-footer">
+        <input id="chat-input" type="text" class="chat-input" placeholder="Nhập tin nhắn..." />
+        <button class="btn-chat-send" onclick="sendMessage()">Gửi</button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        function openChat(btn) {
+            var data = $(btn).data('booking');
+            var box = $('#chatbox');
+            $('#chat-title').html('<i class="fa-regular fa-comments me-2"></i> Đơn đặt #' + (data.Id || ''));
+            
+            var html = '<div class="card p-3 border-0 shadow-sm mb-3">' +
+                '<h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-circle-info me-2"></i>Thông tin đơn</h6>' +
+                '<p class="mb-2"><strong>Xe:</strong> ' + (data.CarName||'') + '</p>' +
+                '<p class="mb-2"><strong>Khách thuê:</strong> ' + (data.RenterName||'') + '</p>' +
+                '<p class="mb-2"><strong>Từ ngày:</strong> ' + (data.StartDate||'') + '</p>' +
+                '<p class="mb-2"><strong>Đến ngày:</strong> ' + (data.EndDate||'') + '</p>' +
+                '<p class="mb-0"><strong>Trạng thái:</strong> <span class="badge bg-primary">' + (data.Status||'') + '</span></p>' +
+                '</div>';
+                
+            if (data.Message) {
+                html += '<div class="card p-3 border-0 shadow-sm mb-3 bg-white">' +
+                    '<strong>Lời nhắn:</strong><p class="mb-0 text-muted mt-1">' + data.Message + '</p>' +
+                    '</div>';
+            }
+            
+            html += '<div class="text-center text-muted small py-2 border-bottom mb-3">Lịch sử chat</div>';
+            
+            $('#chat-body').html(html);
+            box.fadeIn(200).attr('aria-hidden','false');
+        }
+
+        function closeChat(){ 
+            $('#chatbox').fadeOut(200).attr('aria-hidden','true'); 
+        }
+
+        function sendMessage(){
+            var msg = $('#chat-input').val().trim(); 
+            if(!msg) return;
+            $('#chat-body').append('<div class="d-flex justify-content-end mb-2"><div class="bg-primary text-white p-2 rounded-3 px-3" style="max-width: 80%;">' + $('<div/>').text(msg).html() + '</div></div>');
+            $('#chat-input').val('');
+            // Scroll to bottom
+            var chatBody = document.getElementById('chat-body');
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+    </script>
+}

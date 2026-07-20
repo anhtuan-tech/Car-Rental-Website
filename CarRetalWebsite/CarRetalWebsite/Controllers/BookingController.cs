@@ -10,7 +10,7 @@ using CarRetalWebsite.Services;
 
 namespace CarRetalWebsite.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Customer")]
     public class BookingController : Controller
     {
         private readonly CarRentalDbContext _context;
@@ -276,7 +276,7 @@ namespace CarRetalWebsite.Controllers
             vnpay.AddRequestData("vnp_OrderType", "other");
             vnpay.AddRequestData("vnp_ReturnUrl", vnp_ReturnUrl);
             
-            string txnRef = $"{booking.BookingId}_{DateTime.Now.Ticks}";
+            string txnRef = $"{booking.BookingId}T{DateTime.Now.Ticks}";
             vnpay.AddRequestData("vnp_TxnRef", txnRef);
 
             string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
@@ -315,7 +315,7 @@ namespace CarRetalWebsite.Controllers
                 bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, vnp_HashSecret);
                 if (checkSignature)
                 {
-                    string[] parts = txnRef.Split('_');
+                    string[] parts = txnRef.Split('T');
                     if (parts.Length > 0 && int.TryParse(parts[0], out int bookingId))
                     {
                         var booking = await _context.Bookings

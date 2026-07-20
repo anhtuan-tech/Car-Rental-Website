@@ -9,7 +9,7 @@ using CarRetalWebsite.Models;
 
 namespace CarRetalWebsite.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Customer")]
     public class FeedbackController : Controller
     {
         private readonly CarRentalDbContext _context;

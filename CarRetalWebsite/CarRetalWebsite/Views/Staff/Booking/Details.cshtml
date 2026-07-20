@@ -1,6 +1,7 @@
-﻿@model CarRetalWebsite.Models.Booking
+@model CarRetalWebsite.Models.Booking
 
 @{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Booking Details";
     var statusClass = (Model.Status ?? "").Replace(" ", "");
     var carImage = Model.Car?.CarImages?.FirstOrDefault()?.ImageUrl;
@@ -8,18 +9,13 @@
 
 <style>
     :root {
-        --brand: #2563eb;
-        --brand-dark: #1d4ed8;
+        --brand: #0284c7;
+        --brand-dark: #0369a1;
         --ink: #0f172a;
         --muted: #64748b;
         --line: #e6eaf1;
         --bg: #f4f6fb;
         --card: #ffffff;
-    }
-
-    body {
-        background: radial-gradient(1200px 500px at 100% -10%, rgba(37, 99, 235, 0.08), transparent 60%), var(--bg);
-        color: var(--ink);
     }
 
     .cr-container {

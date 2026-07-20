@@ -1,14 +1,12 @@
-﻿@using CarRetalWebsite.Models
+@using CarRetalWebsite.Models
 @model IEnumerable<CarRetalWebsite.Models.Car>
 
 @{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Manage Cars";
 }
 
 <style>
-    body {
-        background: #f5f7fb;
-    }
 
     .page-title {
         font-size: 2rem;
