@@ -1,0 +1,96 @@
+@model IEnumerable<dynamic>
+
+@{
+	Layout = null; 
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Booking History</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css" />
+	<style>
+		.chatbox { display:none; position:fixed; right:20px; bottom:20px; width:360px; max-height:70vh; background:#fff; border:1px solid #ccc; box-shadow:0 4px 12px rgba(0,0,0,.15); }
+		.chatbox header { padding:8px 12px; background:#0078d4; color:#fff; }
+		.chatbox .body { padding:12px; overflow:auto; max-height:56vh; }
+		.chatbox .footer { padding:8px 12px; border-top:1px solid #eee; }
+	</style>
+</head>
+<body>
+	<main class="container">
+		<h3>Booking History</h3>
+
+		<table role="table">
+			<thead>
+				<tr>
+					<th>Booking ID</th>
+					<th>Car</th>
+					<th>Renter</th>
+					<th>From</th>
+					<th>To</th>
+					<th>Status</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				@if (Model != null) {
+					foreach (var b in Model) {
+						<tr>
+							<td>@b.Id</td>
+							<td>@b.CarName</td>
+							<td>@b.RenterName</td>
+							<td>@(b.StartDate ?? "")</td>
+							<td>@(b.EndDate ?? "")</td>
+							<td>@(b.Status ?? "")</td>
+							<td>
+								<button class="primary" data-booking='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(b))' onclick="openChat(this)">Open Chat</button>
+							</td>
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
+	</main>
+
+	<div id="chatbox" class="chatbox" aria-hidden="true">
+		<header>
+			<span id="chat-title">Booking</span>
+			<button style="float:right; background:transparent; border:none; color:#fff;" onclick="closeChat()">✕</button>
+		</header>
+		<div class="body" id="chat-body">
+			<!-- booking details go here -->
+		</div>
+		<div class="footer">
+			<input id="chat-input" type="text" placeholder="Type message..." style="width:70%;" />
+			<button onclick="sendMessage()">Send</button>
+		</div>
+	</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script>
+		function openChat(btn) {
+			var data = $(btn).data('booking');
+			var box = $('#chatbox');
+			$('#chat-title').text('Booking #' + (data.Id || ''));
+			var html = '<p><strong>Car:</strong> ' + (data.CarName||'') + '</p>' +
+				'<p><strong>Renter:</strong> ' + (data.RenterName||'') + '</p>' +
+				'<p><strong>From:</strong> ' + (data.StartDate||'') + '</p>' +
+				'<p><strong>To:</strong> ' + (data.EndDate||'') + '</p>' +
+				'<p><strong>Status:</strong> ' + (data.Status||'') + '</p>';
+			if (data.Message) html += '<hr/><p><strong>Initial Message:</strong><br/>' + data.Message + '</p>';
+			$('#chat-body').html(html);
+			box.show().attr('aria-hidden','false');
+		}
+
+		function closeChat(){ $('#chatbox').hide().attr('aria-hidden','true'); }
+
+		function sendMessage(){
+			var msg = $('#chat-input').val().trim(); if(!msg) return;
+			$('#chat-body').append('<div><strong>You:</strong> ' + $('<div/>').text(msg).html() + '</div>');
+			$('#chat-input').val('');
+			// TODO: send to server via AJAX endpoint
+		}
+	</script>
+</body>
+</html>
